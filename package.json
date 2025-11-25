@@ -1,0 +1,19 @@
+{
+  "name": "ironman-penghu-training-plan",
+  "version": "1.0.0",
+  "description": "2026 IRONMAN 澎湖 90天訓練計劃 - DT Swiss",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "build": "echo 'Static site - no build required'"
+  },
+  "keywords": [
+    "ironman",
+    "triathlon",
+    "training",
+    "penghu",
+    "dt-swiss"
+  ],
+  "author": "",
+  "license": "MIT"
+}
