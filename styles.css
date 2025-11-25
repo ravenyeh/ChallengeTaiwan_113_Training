@@ -62,7 +62,20 @@ body {
 
 .dt-swiss-logo {
     height: 30px;
-    /* Logo is already white from official source */
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-color);
+    transition: var(--transition);
+}
+
+.profile-avatar:hover {
+    transform: scale(1.1);
+    border-color: var(--white);
 }
 
 .nav-links {
