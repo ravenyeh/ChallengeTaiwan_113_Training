@@ -1711,6 +1711,10 @@ body {
     height: 55px;
 }
 
+.footer-logo-img.garmin-footer {
+    height: 30px;
+}
+
 .footer-logo-separator {
     font-size: 1.5rem;
     font-weight: 300;
