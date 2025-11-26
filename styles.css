@@ -239,8 +239,8 @@ body {
 }
 
 .stat-icon-img {
-    width: 48px;
-    height: 48px;
+    width: 60px;
+    height: 60px;
     object-fit: contain;
     margin-bottom: 10px;
 }
@@ -1546,8 +1546,8 @@ body {
     }
 
     .stat-icon-img {
-        width: 36px;
-        height: 36px;
+        width: 42px;
+        height: 42px;
     }
 
     .stat-value {
