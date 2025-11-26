@@ -385,14 +385,33 @@ function initWeeklyMileageChart() {
 
 // Countdown to race day
 function updateCountdown() {
-    const raceDay = new Date('2026-04-12T06:00:00');
+    const raceDay = new Date('2026-04-12T06:00:00+08:00');
     const now = new Date();
     const diff = raceDay - now;
 
+    const daysEl = document.getElementById('countdown-days');
+    const hoursEl = document.getElementById('countdown-hours');
+    const minutesEl = document.getElementById('countdown-minutes');
+    const secondsEl = document.getElementById('countdown-seconds');
+
     if (diff > 0) {
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        console.log(`距離比賽還有 ${days} 天`);
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        if (daysEl) daysEl.textContent = days;
+        if (hoursEl) hoursEl.textContent = hours.toString().padStart(2, '0');
+        if (minutesEl) minutesEl.textContent = minutes.toString().padStart(2, '0');
+        if (secondsEl) secondsEl.textContent = seconds.toString().padStart(2, '0');
+    } else {
+        if (daysEl) daysEl.textContent = '0';
+        if (hoursEl) hoursEl.textContent = '00';
+        if (minutesEl) minutesEl.textContent = '00';
+        if (secondsEl) secondsEl.textContent = '00';
     }
 }
 
+// Update countdown every second
 updateCountdown();
+setInterval(updateCountdown, 1000);
