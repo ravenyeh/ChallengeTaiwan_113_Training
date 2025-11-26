@@ -1419,20 +1419,6 @@ body {
         font-size: 4rem;
     }
 
-    .table-header, .table-row {
-        grid-template-columns: 1fr;
-        gap: 5px;
-    }
-
-    .table-header .col:not(:first-child),
-    .table-row .col:not(:first-child) {
-        display: none;
-    }
-
-    .comparison-table {
-        display: none;
-    }
-
     .phases {
         grid-template-columns: 1fr;
     }
@@ -1474,33 +1460,65 @@ body {
         display: block;
     }
 
-    .table-header {
+    .comparison-table .table-header {
         display: none;
     }
 
-    .table-row {
+    .comparison-table .table-row {
         display: block;
-        padding: 20px;
-        margin-bottom: 15px;
+        padding: 15px;
+        margin-bottom: 10px;
         border-radius: 8px;
         border: 1px solid #eee;
+        background: #fafafa;
     }
 
-    .table-row .col {
+    .comparison-table .table-row.total {
+        background: #f0f0f0;
+    }
+
+    .comparison-table .table-row .col {
         display: flex;
         justify-content: space-between;
-        padding: 5px 0;
+        padding: 6px 0;
+        border-bottom: 1px solid #eee;
     }
 
-    .table-row .col:first-child {
+    .comparison-table .table-row .col:last-child {
+        border-bottom: none;
+    }
+
+    .comparison-table .table-row .col:first-child {
         font-weight: bold;
-        margin-bottom: 10px;
+        font-size: 1.05rem;
+        margin-bottom: 8px;
         justify-content: flex-start;
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 10px;
     }
 
-    .table-row .col:not(:first-child)::before {
-        content: attr(data-label);
+    .comparison-table .table-row .col:nth-child(2)::before {
+        content: "2026目標：";
         color: var(--text-light);
+        font-weight: 500;
+    }
+
+    .comparison-table .table-row .col:nth-child(3)::before {
+        content: "目標配速：";
+        color: var(--text-light);
+        font-weight: 500;
+    }
+
+    .comparison-table .table-row .col:nth-child(4)::before {
+        content: "2025成績：";
+        color: var(--text-light);
+        font-weight: 500;
+    }
+
+    .comparison-table .table-row .col:nth-child(5)::before {
+        content: "需進步：";
+        color: var(--text-light);
+        font-weight: 500;
     }
 }
 
