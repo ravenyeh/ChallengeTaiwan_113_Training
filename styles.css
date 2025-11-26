@@ -604,6 +604,15 @@ body {
     font-weight: 600;
 }
 
+.schedule-table tbody tr.holiday-row {
+    background: linear-gradient(135deg, #fff8f0, #ffe4cc);
+    border-left: 4px solid #e94560;
+}
+
+.schedule-table tbody tr.holiday-row td:first-child {
+    position: relative;
+}
+
 .intensity-badge {
     display: inline-block;
     padding: 4px 10px;
