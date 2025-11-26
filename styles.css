@@ -31,6 +31,7 @@ body {
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--white);
+    -webkit-overflow-scrolling: touch;
 }
 
 .container {
@@ -1461,6 +1462,15 @@ body {
 }
 
 @media (max-width: 768px) {
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        padding: 10px 0;
+    }
+
     .nav-links {
         display: none;
     }
