@@ -1737,6 +1737,32 @@ body {
     font-size: 0.9rem;
 }
 
+.footer-disclaimer {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.footer-disclaimer p {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.footer-disclaimer p:first-child {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.8rem;
+    margin-bottom: 12px;
+}
+
+.footer-disclaimer strong {
+    color: rgba(255,255,255,0.6);
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .phases {
