@@ -1,11 +1,11 @@
-/* CSS Variables */
+/* CSS Variables - Challenge Family Brand Colors */
 :root {
-    --primary-color: #e31837;
-    --secondary-color: #1a1a1a;
-    --accent-color: #ff4d4d;
-    --swim-color: #0077be;
-    --bike-color: #f5a623;
-    --run-color: #4caf50;
+    --primary-color: #F26522;           /* Challenge Family 橙色 */
+    --secondary-color: #1a1a1a;         /* 深黑色 */
+    --accent-color: #FF8C42;            /* 淺橙色強調 */
+    --swim-color: #0077be;              /* 游泳藍 */
+    --bike-color: #F26522;              /* 騎車橙 - Challenge Family */
+    --run-color: #4caf50;               /* 跑步綠 */
     --text-color: #333;
     --text-light: #666;
     --bg-light: #f8f9fa;
@@ -231,7 +231,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: rgba(227, 24, 55, 0.9);
+    background: rgba(242, 101, 34, 0.9);  /* Challenge Family Orange */
     padding: 6px 10px;
     border-radius: 8px;
     min-width: 50px;
@@ -369,7 +369,7 @@ body {
 }
 
 .today-phase.phase-建構期 { background: rgba(0, 119, 190, 0.7); }
-.today-phase.phase-強化期 { background: rgba(227, 24, 55, 0.7); }
+.today-phase.phase-強化期 { background: rgba(242, 101, 34, 0.7); }  /* Challenge Family Orange */
 .today-phase.phase-巔峰期 { background: rgba(245, 166, 35, 0.7); }
 .today-phase.phase-減量期 { background: rgba(76, 175, 80, 0.7); }
 .today-phase.phase-賽前週 { background: rgba(156, 39, 176, 0.7); }
@@ -995,7 +995,7 @@ body {
 .phase-強化期 { background: #fff3e0; color: #ef6c00; }
 .phase-巔峰期 { background: #fce4ec; color: #c2185b; }
 .phase-減量期 { background: #e3f2fd; color: #1565c0; }
-.phase-賽前週 { background: #d32f2f; color: #fff; }
+.phase-賽前週 { background: #F26522; color: #fff; }  /* Challenge Family Orange */
 
 /* Strategy Section */
 .strategy-section {
@@ -1629,8 +1629,8 @@ body {
 
 /* AI Workflow */
 .ai-workflow {
-    background: rgba(227, 24, 55, 0.1);
-    border: 1px solid rgba(227, 24, 55, 0.3);
+    background: rgba(242, 101, 34, 0.1);   /* Challenge Family Orange */
+    border: 1px solid rgba(242, 101, 34, 0.3);
     border-radius: var(--border-radius);
     padding: 40px;
 }
@@ -2159,7 +2159,7 @@ body {
 
 .btn-view-workout:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(227, 24, 55, 0.4);
+    box-shadow: 0 4px 15px rgba(242, 101, 34, 0.4);  /* Challenge Family Orange */
 }
 
 /* Workout Modal */
