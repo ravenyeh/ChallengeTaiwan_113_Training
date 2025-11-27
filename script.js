@@ -1105,14 +1105,16 @@ async function garminLogin() {
             }, 1000);
         } else {
             let errorMsg = data.error || '登入失敗';
-            if (data.detail) {
+            if (data.suggestion) {
+                errorMsg += '\n' + data.suggestion;
+            } else if (data.detail) {
                 errorMsg += '\n' + data.detail;
             }
             updateGarminStatus(errorMsg, true);
         }
     } catch (error) {
         console.error('Garmin login error:', error);
-        updateGarminStatus('連線錯誤，請使用「複製 JSON」或「下載 .json」手動匯入', true);
+        updateGarminStatus('連線錯誤\n請使用「複製 JSON」或「下載 .json」手動匯入至 Garmin Connect', true);
     }
 }
 
@@ -1265,14 +1267,16 @@ async function directImportToGarmin(dayIndex) {
             updateGarminStatus(data.message || '匯入成功！', false);
         } else {
             let errorMsg = data.error || '匯入失敗';
-            if (data.detail) {
+            if (data.suggestion) {
+                errorMsg += '\n' + data.suggestion;
+            } else if (data.detail) {
                 errorMsg += '\n' + data.detail;
             }
             updateGarminStatus(errorMsg, true);
         }
     } catch (error) {
         console.error('Direct import error:', error);
-        updateGarminStatus('連線錯誤，請使用「複製 JSON」或「下載 .json」手動匯入', true);
+        updateGarminStatus('連線錯誤\n請使用「複製 JSON」或「下載 .json」手動匯入至 Garmin Connect', true);
     }
 }
 
