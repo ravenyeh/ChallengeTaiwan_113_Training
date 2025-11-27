@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
             return res.status(400).json({ error: '請提供 Email 和密碼' });
         }
 
-        // Initialize GarminConnect
+        // Initialize with credentials (required for @gooin/garmin-connect)
         const GC = new GarminConnect({
             username: email,
             password: password
@@ -52,56 +52,43 @@ module.exports = async (req, res) => {
         }
 
         // Get user profile for confirmation
-        let displayName = email.split('@')[0];
-        try {
-            const userProfile = await GC.getUserProfile();
-            if (userProfile && userProfile.displayName) {
-                displayName = userProfile.displayName;
-            }
-        } catch (profileError) {
-            console.log('Could not fetch profile:', profileError.message);
-        }
+        const userProfile = await GC.getUserProfile();
 
         return res.status(200).json({
             success: true,
             sessionId: sessionId,
             user: {
-                displayName: displayName,
-                email: email
+                displayName: userProfile.displayName || email.split('@')[0],
+                profileImageUrl: userProfile.profileImageUrlSmall || null
             }
         });
 
     } catch (error) {
         console.error('Garmin login error:', error.message);
+        console.error('Full error:', JSON.stringify(error, null, 2));
 
         let errorMessage = '登入失敗';
-        let suggestion = '請使用「複製 JSON」或「下載 .json」功能手動匯入至 Garmin Connect';
+        let errorDetail = '';
 
         if (error.message) {
             const msg = error.message.toLowerCase();
-            if (msg.includes('credentials') || msg.includes('password') || msg.includes('401') || msg.includes('invalid')) {
+            if (msg.includes('credentials') || msg.includes('password') || msg.includes('401')) {
                 errorMessage = 'Email 或密碼錯誤';
-                suggestion = '請確認您的 Garmin Connect 帳號密碼是否正確';
-            } else if (msg.includes('network') || msg.includes('fetch') || msg.includes('enotfound') || msg.includes('timeout')) {
-                errorMessage = '網路連線錯誤';
-                suggestion = '請檢查網路連線後再試';
-            } else if (msg.includes('captcha') || msg.includes('robot') || msg.includes('verification')) {
-                errorMessage = 'Garmin 需要人機驗證';
-                suggestion = '請先在瀏覽器登入 Garmin Connect 完成驗證，或使用手動匯入方式';
-            } else if (msg.includes('blocked') || msg.includes('forbidden') || msg.includes('403') || msg.includes('rate')) {
-                errorMessage = 'Garmin 暫時封鎖此連線';
-                suggestion = '請稍後再試，或使用「複製 JSON」功能手動匯入';
-            } else if (msg.includes('mfa') || msg.includes('two-factor') || msg.includes('2fa')) {
-                errorMessage = '此帳號已啟用雙重驗證';
-                suggestion = '啟用 MFA 的帳號無法自動登入，請使用手動匯入方式';
+            } else if (msg.includes('network') || msg.includes('fetch')) {
+                errorMessage = '網路連線錯誤，請稍後再試';
+            } else if (msg.includes('captcha') || msg.includes('robot')) {
+                errorMessage = 'Garmin 需要驗證碼，請使用手動匯入方式';
+            } else if (msg.includes('blocked') || msg.includes('forbidden')) {
+                errorMessage = 'Garmin 暫時封鎖此連線，請稍後再試或使用手動匯入';
+            } else {
+                errorDetail = error.message;
             }
         }
 
         return res.status(401).json({
             success: false,
             error: errorMessage,
-            suggestion: suggestion,
-            detail: process.env.NODE_ENV === 'development' ? error.message : undefined
+            detail: errorDetail || 'Garmin Connect API 登入失敗，建議使用「複製 JSON」或「下載 .json」功能手動匯入'
         });
     }
 };
