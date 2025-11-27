@@ -68,16 +68,39 @@ module.exports = async (req, res) => {
                 // Schedule if date provided
                 if (scheduledDate && createdWorkout && createdWorkout.workoutId) {
                     try {
-                        await GC.scheduleWorkout(createdWorkout.workoutId, scheduledDate);
+                        // Try library method first
+                        if (typeof GC.scheduleWorkout === 'function') {
+                            await GC.scheduleWorkout(createdWorkout.workoutId, scheduledDate);
+                        } else if (GC.client && GC.client.put) {
+                            // Use raw API: PUT /workout-service/schedule/{workoutId}
+                            await GC.client.put(
+                                `https://connect.garmin.com/workout-service/schedule/${createdWorkout.workoutId}`,
+                                { date: scheduledDate }
+                            );
+                        }
+                        console.log('Scheduled workout', createdWorkout.workoutId, 'to', scheduledDate);
                     } catch (e) {
                         console.log('Schedule failed:', e.message);
+                        // Try alternative POST endpoint
+                        try {
+                            if (GC.client && GC.client.post) {
+                                await GC.client.post(
+                                    `https://connect.garmin.com/workout-service/schedule/${createdWorkout.workoutId}`,
+                                    { date: scheduledDate }
+                                );
+                                console.log('Scheduled via POST:', createdWorkout.workoutId);
+                            }
+                        } catch (e2) {
+                            console.log('Schedule POST also failed:', e2.message);
+                        }
                     }
                 }
 
                 results.push({
                     success: true,
                     workoutName: workout.workoutName,
-                    workoutId: createdWorkout?.workoutId
+                    workoutId: createdWorkout?.workoutId,
+                    scheduledDate: scheduledDate || null
                 });
             } catch (e) {
                 results.push({
