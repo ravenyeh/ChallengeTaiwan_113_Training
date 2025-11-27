@@ -18,6 +18,5 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "garmin-connect": "^1.6.4"
-  }
+    "garmin-connect": "^1.6.2" 
 }
