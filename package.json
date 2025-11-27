@@ -1,7 +1,7 @@
 {
-  "name": "ironman-penghu-training-plan",
+  "name": "challenge-taiwan-113-training-plan",
   "version": "1.0.0",
-  "description": "2026 IRONMAN 澎湖 90天訓練計劃 - DT Swiss",
+  "description": "2026 Challenge Taiwan 113 16週訓練計劃",
   "main": "index.html",
   "scripts": {
     "start": "npx serve .",
@@ -9,11 +9,12 @@
     "build": "echo 'Static site - no build required'"
   },
   "keywords": [
-    "ironman",
+    "challenge-taiwan",
     "triathlon",
+    "113",
+    "half-ironman",
     "training",
-    "penghu",
-    "dt-swiss"
+    "taitung"
   ],
   "author": "",
   "license": "MIT",

@@ -72,12 +72,9 @@ body {
     transition: var(--transition);
 }
 
-.nav-logo.dt-logo {
-    height: 26px;
-}
 
-.nav-logo.ironman-logo {
-    height: 45px;
+.nav-logo.challenge-logo {
+    height: 40px;
 }
 
 .nav-logo.garmin-logo {
@@ -188,7 +185,7 @@ body {
     height: 40px;
 }
 
-.hero-logo.ironman-logo {
+.hero-logo.challenge-logo {
     height: 70px;
 }
 
@@ -1711,7 +1708,7 @@ body {
     height: 35px;
 }
 
-.footer-logo-img.ironman-footer {
+.footer-logo-img.challenge-footer {
     height: 55px;
 }
 
@@ -1837,7 +1834,7 @@ body {
         height: 14px;
     }
 
-    .nav-logo.ironman-logo {
+    .nav-logo.challenge-logo {
         height: 26px;
     }
 
@@ -2061,7 +2058,7 @@ body {
         height: 25px;
     }
 
-    .footer-logo-img.ironman-footer {
+    .footer-logo-img.challenge-footer {
         height: 40px;
     }
 
