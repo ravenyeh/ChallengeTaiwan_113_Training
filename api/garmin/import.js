@@ -65,34 +65,22 @@ module.exports = async (req, res) => {
                     }
                 }
 
-                // Schedule if date provided
+                // Schedule if date provided - use POST method
                 if (scheduledDate && createdWorkout && createdWorkout.workoutId) {
                     try {
-                        // Try library method first
-                        if (typeof GC.scheduleWorkout === 'function') {
+                        const scheduleEndpoint = `https://connect.garmin.com/workout-service/schedule/${createdWorkout.workoutId}`;
+                        const schedulePayload = { date: scheduledDate };
+
+                        console.log('Scheduling workout:', createdWorkout.workoutId, 'to date:', scheduledDate);
+
+                        if (GC.client && GC.client.post) {
+                            const scheduleResult = await GC.client.post(scheduleEndpoint, schedulePayload);
+                            console.log('Schedule result:', JSON.stringify(scheduleResult?.data || scheduleResult));
+                        } else if (typeof GC.scheduleWorkout === 'function') {
                             await GC.scheduleWorkout(createdWorkout.workoutId, scheduledDate);
-                        } else if (GC.client && GC.client.put) {
-                            // Use raw API: PUT /workout-service/schedule/{workoutId}
-                            await GC.client.put(
-                                `https://connect.garmin.com/workout-service/schedule/${createdWorkout.workoutId}`,
-                                { date: scheduledDate }
-                            );
                         }
-                        console.log('Scheduled workout', createdWorkout.workoutId, 'to', scheduledDate);
                     } catch (e) {
                         console.log('Schedule failed:', e.message);
-                        // Try alternative POST endpoint
-                        try {
-                            if (GC.client && GC.client.post) {
-                                await GC.client.post(
-                                    `https://connect.garmin.com/workout-service/schedule/${createdWorkout.workoutId}`,
-                                    { date: scheduledDate }
-                                );
-                                console.log('Scheduled via POST:', createdWorkout.workoutId);
-                            }
-                        } catch (e2) {
-                            console.log('Schedule POST also failed:', e2.message);
-                        }
                     }
                 }
 
