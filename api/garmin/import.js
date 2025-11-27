@@ -46,23 +46,42 @@ module.exports = async (req, res) => {
             try {
                 const { workout, scheduledDate } = workoutData;
 
-                // Create workout
+                // Create workout using available methods
                 let createdWorkout;
-                try {
-                    createdWorkout = await GC.addWorkout(workout);
-                } catch (e) {
-                    // Try alternative method if addWorkout doesn't exist
-                    console.log('addWorkout failed, trying alternative:', e.message);
 
-                    if (GC.client && GC.client.post) {
+                // Try addWorkout method first
+                if (typeof GC.addWorkout === 'function') {
+                    try {
+                        createdWorkout = await GC.addWorkout(workout);
+                    } catch (e) {
+                        console.log('addWorkout method failed:', e.message);
+                    }
+                }
+
+                // Fallback: Try using internal client
+                if (!createdWorkout && GC.client && typeof GC.client.post === 'function') {
+                    try {
                         const response = await GC.client.post(
-                            'https://connect.garmin.com/workout-service/workout',
+                            '/workout-service/workout',
                             { ...workout, workoutId: null, ownerId: null }
                         );
-                        createdWorkout = response.data;
-                    } else {
-                        throw e;
+                        createdWorkout = response.data || response;
+                    } catch (e) {
+                        console.log('client.post method failed:', e.message);
                     }
+                }
+
+                // Fallback: Try createWorkout if available
+                if (!createdWorkout && typeof GC.createWorkout === 'function') {
+                    try {
+                        createdWorkout = await GC.createWorkout(workout);
+                    } catch (e) {
+                        console.log('createWorkout method failed:', e.message);
+                    }
+                }
+
+                if (!createdWorkout) {
+                    throw new Error('無法建立訓練，API 方法不可用');
                 }
 
                 // Schedule if date provided - use correct scheduleWorkout format
@@ -79,11 +98,17 @@ module.exports = async (req, res) => {
                             );
                             scheduled = true;
                             console.log('Workout scheduled successfully');
+                        } else if (GC.client && typeof GC.client.post === 'function') {
+                            await GC.client.post(
+                                `/workout-service/schedule/${createdWorkout.workoutId}`,
+                                { date: scheduledDate }
+                            );
+                            scheduled = true;
                         } else {
                             console.log('scheduleWorkout method not available');
                         }
                     } catch (e) {
-                        console.log('Schedule failed:', e.message);
+                        console.log('Schedule failed (non-critical):', e.message);
                     }
                 }
 
@@ -128,22 +153,29 @@ module.exports = async (req, res) => {
         console.error('Garmin import error:', error.message);
 
         let errorMessage = '匯入失敗';
+        let suggestion = '請使用「複製 JSON」或「下載 .json」功能手動匯入';
 
         if (error.message) {
             const msg = error.message.toLowerCase();
-            if (msg.includes('credentials') || msg.includes('password') || msg.includes('401')) {
+            if (msg.includes('credentials') || msg.includes('password') || msg.includes('401') || msg.includes('invalid')) {
                 errorMessage = 'Email 或密碼錯誤';
-            } else if (msg.includes('captcha') || msg.includes('robot')) {
-                errorMessage = 'Garmin 需要驗證碼，請使用手動匯入方式';
-            } else if (msg.includes('blocked') || msg.includes('forbidden')) {
-                errorMessage = 'Garmin 暫時封鎖此連線，請使用手動匯入';
+                suggestion = '請確認您的 Garmin Connect 帳號密碼是否正確';
+            } else if (msg.includes('captcha') || msg.includes('robot') || msg.includes('verification')) {
+                errorMessage = 'Garmin 需要人機驗證';
+                suggestion = '請先在瀏覽器登入 Garmin Connect 完成驗證，或使用手動匯入方式';
+            } else if (msg.includes('blocked') || msg.includes('forbidden') || msg.includes('403') || msg.includes('rate')) {
+                errorMessage = 'Garmin 暫時封鎖此連線';
+                suggestion = '請稍後再試，或使用「複製 JSON」功能手動匯入';
+            } else if (msg.includes('mfa') || msg.includes('two-factor') || msg.includes('2fa')) {
+                errorMessage = '此帳號已啟用雙重驗證';
+                suggestion = '啟用 MFA 的帳號無法自動登入，請使用手動匯入方式';
             }
         }
 
         return res.status(401).json({
             success: false,
             error: errorMessage,
-            detail: 'Garmin Connect API 失敗，建議使用「複製 JSON」或「下載 .json」功能手動匯入'
+            suggestion: suggestion
         });
     }
 };
