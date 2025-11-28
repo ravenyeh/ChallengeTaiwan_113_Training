@@ -2544,6 +2544,92 @@ body {
     border-radius: 15px;
 }
 
+/* Garmin-style Steps Preview */
+.steps-preview {
+    background: #1c1c1e;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 15px;
+}
+
+.steps-header {
+    color: #8e8e93;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.step-item {
+    display: flex;
+    background: #2c2c2e;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.step-color-bar {
+    width: 4px;
+    flex-shrink: 0;
+}
+
+.step-content {
+    padding: 12px 16px;
+    flex: 1;
+}
+
+.step-label {
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.step-duration {
+    color: #8e8e93;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+}
+
+.step-target {
+    color: #8e8e93;
+    font-size: 0.8rem;
+}
+
+.step-cadence {
+    color: #8e8e93;
+    font-size: 0.8rem;
+}
+
+/* Repeat Groups */
+.step-repeat-group {
+    background: #2c2c2e;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.repeat-header {
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 12px 16px;
+    border-bottom: 1px solid #3c3c3e;
+}
+
+.repeat-steps {
+    padding: 8px;
+}
+
+.repeat-steps .step-item {
+    margin-bottom: 6px;
+}
+
+.repeat-steps .step-item:last-child {
+    margin-bottom: 0;
+}
+
 .workout-export-buttons {
     display: flex;
     gap: 8px;
