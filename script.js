@@ -433,8 +433,42 @@ function saveUserSettings(settings) {
     showSettingsSavedMessage();
 }
 
-// Show settings saved confirmation message
+// Show settings saved confirmation message and update summary banner
 function showSettingsSavedMessage() {
+    // Close settings modal
+    closeSettingsModal();
+
+    // Update and show settings summary banner
+    const banner = document.getElementById('settingsSummaryBanner');
+    const summaryValues = document.getElementById('summaryValues');
+
+    if (banner && summaryValues) {
+        const pwr = getPowerToWeightRatio();
+        summaryValues.innerHTML = `
+            <span class="value-item">
+                <img src="images/cycling.png" alt="FTP">
+                FTP: ${userFTP}W
+            </span>
+            <span class="value-item">
+                <img src="images/cycling.png" alt="體重">
+                體重: ${userWeight}kg (${pwr}W/kg)
+            </span>
+            <span class="value-item">
+                <img src="images/run.png" alt="跑步">
+                馬拉松配速: ${userRunPace}/km
+            </span>
+            <span class="value-item">
+                <img src="images/swim.png" alt="游泳">
+                CSS: ${userSwimCSS}/100m
+            </span>
+        `;
+        banner.style.display = 'flex';
+
+        // Scroll to show the banner
+        banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Show brief alert confirmation
     alert('課表更新完成！');
 }
 
@@ -521,6 +555,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Generate all workouts with user settings
     generateAllWorkouts();
     updateSettingsDisplay();
+
+    // Show settings summary banner if user has saved settings
+    initSettingsSummaryBanner();
 
     populateSchedule();
 
@@ -2526,3 +2563,81 @@ function displayTodayTraining() {
         }
     }
 }
+
+// ===== Settings Modal Functions =====
+
+// Initialize settings summary banner on page load
+function initSettingsSummaryBanner() {
+    // Check if user has saved settings (not default values)
+    const savedFTP = localStorage.getItem('userFTP');
+    const savedRunPace = localStorage.getItem('userRunPace');
+    const savedSwimCSS = localStorage.getItem('userSwimCSS');
+
+    // Show banner if any setting has been saved
+    if (savedFTP || savedRunPace || savedSwimCSS) {
+        const banner = document.getElementById('settingsSummaryBanner');
+        const summaryValues = document.getElementById('summaryValues');
+
+        if (banner && summaryValues) {
+            const pwr = getPowerToWeightRatio();
+            summaryValues.innerHTML = `
+                <span class="value-item">
+                    <img src="images/cycling.png" alt="FTP">
+                    FTP: ${userFTP}W
+                </span>
+                <span class="value-item">
+                    <img src="images/cycling.png" alt="體重">
+                    體重: ${userWeight}kg (${pwr}W/kg)
+                </span>
+                <span class="value-item">
+                    <img src="images/run.png" alt="跑步">
+                    馬拉松配速: ${userRunPace}/km
+                </span>
+                <span class="value-item">
+                    <img src="images/swim.png" alt="游泳">
+                    CSS: ${userSwimCSS}/100m
+                </span>
+            `;
+            banner.style.display = 'flex';
+        }
+    }
+}
+
+// Open settings modal
+function openSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// Close settings modal
+function closeSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+}
+
+// Close settings modal when clicking outside
+document.addEventListener('click', (e) => {
+    const settingsModal = document.getElementById('settingsModal');
+    if (e.target === settingsModal) {
+        closeSettingsModal();
+    }
+});
+
+// Extend Escape key handler for settings modal
+(function() {
+    const originalKeyHandler = document.onkeydown;
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const settingsModal = document.getElementById('settingsModal');
+            if (settingsModal && settingsModal.classList.contains('show')) {
+                closeSettingsModal();
+            }
+        }
+    });
+})();
