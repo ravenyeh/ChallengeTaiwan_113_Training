@@ -969,9 +969,21 @@ function formatStep(step) {
         childStepId: null,
         stepType: step.stepType,
         targetType: step.targetType || { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
-        targetValueOne: null,
-        targetValueTwo: null
+        targetValueOne: step.targetValueOne !== undefined ? step.targetValueOne : null,
+        targetValueTwo: step.targetValueTwo !== undefined ? step.targetValueTwo : null
     };
+
+    // Add secondary target if present (e.g., cadence for bike workouts)
+    if (step.secondaryTargetType) {
+        formattedStep.secondaryTargetType = step.secondaryTargetType;
+        formattedStep.secondaryTargetValueOne = step.secondaryTargetValueOne;
+        formattedStep.secondaryTargetValueTwo = step.secondaryTargetValueTwo;
+    }
+
+    // Add description if present
+    if (step.description) {
+        formattedStep.description = step.description;
+    }
 
     // Add endCondition for non-repeat steps
     if (step.endCondition) {
