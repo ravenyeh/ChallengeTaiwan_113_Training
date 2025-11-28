@@ -154,10 +154,10 @@ trainingData.sort((a, b) => new Date(a.date) - new Date(b.date));
 let generatedWorkouts = [];
 
 // User settings (stored in localStorage)
-let userFTP = localStorage.getItem('userFTP') ? parseInt(localStorage.getItem('userFTP')) : 200;
+let userFTP = localStorage.getItem('userFTP') ? parseInt(localStorage.getItem('userFTP')) : 190;
 let userWeight = localStorage.getItem('userWeight') ? parseFloat(localStorage.getItem('userWeight')) : 70; // 體重 kg
 let userRunPace = localStorage.getItem('userRunPace') || '6:00'; // 馬拉松配速 min/km
-let userSwimCSS = localStorage.getItem('userSwimCSS') || '2:00'; // CSS 游泳配速 min/100m
+let userSwimCSS = localStorage.getItem('userSwimCSS') || '2:30'; // CSS 游泳配速 min/100m
 // Advanced settings (optional)
 let userRunVO2max = localStorage.getItem('userRunVO2max') ? parseFloat(localStorage.getItem('userRunVO2max')) : null; // 跑步 VO2max
 let userBikeVO2max = localStorage.getItem('userBikeVO2max') ? parseFloat(localStorage.getItem('userBikeVO2max')) : null; // 自行車 VO2max
@@ -2169,7 +2169,7 @@ function downloadWorkoutJson(idx, filename) {
 function downloadWorkoutZwo(idx, filename) {
     const input = document.getElementById(`workout-json-${idx}`);
     const workout = JSON.parse(input.value);
-    const ftp = parseInt(localStorage.getItem('userFtp')) || 200;
+    const ftp = parseInt(localStorage.getItem('userFTP')) || 190;
 
     let zwoContent = `<workout_file>
     <author>Challenge Taiwan Training</author>
@@ -2239,7 +2239,7 @@ function convertStepToZwoElement(step, ftp, indent) {
 function downloadWorkoutErg(idx, filename) {
     const input = document.getElementById(`workout-json-${idx}`);
     const workout = JSON.parse(input.value);
-    const ftp = parseInt(localStorage.getItem('userFtp')) || 200;
+    const ftp = parseInt(localStorage.getItem('userFTP')) || 190;
 
     let ergContent = `[COURSE HEADER]
 VERSION = 2
@@ -2739,38 +2739,30 @@ function displayTodayTraining() {
 
 // Initialize settings summary banner on page load
 function initSettingsSummaryBanner() {
-    // Check if user has saved settings (not default values)
-    const savedFTP = localStorage.getItem('userFTP');
-    const savedRunPace = localStorage.getItem('userRunPace');
-    const savedSwimCSS = localStorage.getItem('userSwimCSS');
+    const banner = document.getElementById('settingsSummaryBanner');
+    const summaryValues = document.getElementById('summaryValues');
 
-    // Show banner if any setting has been saved
-    if (savedFTP || savedRunPace || savedSwimCSS) {
-        const banner = document.getElementById('settingsSummaryBanner');
-        const summaryValues = document.getElementById('summaryValues');
-
-        if (banner && summaryValues) {
-            const pwr = getPowerToWeightRatio();
-            summaryValues.innerHTML = `
-                <span class="value-item">
-                    <img src="images/cycling.png" alt="FTP">
-                    FTP: ${userFTP}W
-                </span>
-                <span class="value-item">
-                    <img src="images/cycling.png" alt="體重">
-                    體重: ${userWeight}kg (${pwr}W/kg)
-                </span>
-                <span class="value-item">
-                    <img src="images/run.png" alt="跑步">
-                    馬拉松配速: ${userRunPace}/km
-                </span>
-                <span class="value-item">
-                    <img src="images/swim.png" alt="游泳">
-                    CSS: ${userSwimCSS}/100m
-                </span>
-            `;
-            banner.style.display = 'flex';
-        }
+    if (banner && summaryValues) {
+        const pwr = getPowerToWeightRatio();
+        summaryValues.innerHTML = `
+            <span class="value-item">
+                <img src="images/cycling.png" alt="FTP">
+                FTP: ${userFTP}W
+            </span>
+            <span class="value-item">
+                <img src="images/cycling.png" alt="體重">
+                體重: ${userWeight}kg (${pwr}W/kg)
+            </span>
+            <span class="value-item">
+                <img src="images/run.png" alt="跑步">
+                馬拉松配速: ${userRunPace}/km
+            </span>
+            <span class="value-item">
+                <img src="images/swim.png" alt="游泳">
+                CSS: ${userSwimCSS}/100m
+            </span>
+        `;
+        banner.style.display = 'flex';
     }
 }
 

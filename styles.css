@@ -2877,45 +2877,6 @@ body {
     }
 }
 
-/* Section Header with Settings Button */
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.section-header .section-title {
-    margin-bottom: 0;
-}
-
-.btn-settings {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, var(--secondary-color), #1a2a4a);
-    color: var(--white);
-    border: none;
-    border-radius: 25px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    box-shadow: 0 4px 15px rgba(15, 25, 60, 0.3);
-}
-
-.btn-settings:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(15, 25, 60, 0.4);
-}
-
-.btn-settings svg {
-    flex-shrink: 0;
-}
-
 /* Settings Modal */
 .settings-modal {
     display: none;
@@ -3062,10 +3023,6 @@ body {
         flex-direction: column;
         align-items: stretch;
         text-align: center;
-    }
-
-    .btn-settings {
-        justify-content: center;
     }
 
     .settings-modal {
