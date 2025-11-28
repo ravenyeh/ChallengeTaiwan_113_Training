@@ -2112,18 +2112,12 @@ function showWorkoutModal(dayIndex, overrideDate = null) {
                         <span>距離: ${(workout.data.estimatedDistanceInMeters / 1000).toFixed(1)} km</span>
                         <span>預估時間: ${Math.round(workout.data.estimatedDurationInSecs / 60)} 分鐘</span>
                     </div>
-                    <div class="workout-actions-row">
-                        <details class="workout-json-details">
-                            <summary>查看 JSON</summary>
-                            <textarea class="workout-json" id="workout-json-${idx}" rows="12">${JSON.stringify(workout.data, null, 2)}</textarea>
-                            <div class="json-actions">
-                                <button class="btn-copy" onclick="copyWorkoutJson(${idx}, this)">複製 JSON</button>
-                                <button class="btn-download" onclick="downloadWorkoutJson(${idx}, '${escapedName}')">下載 .json</button>
-                            </div>
-                        </details>
+                    <input type="hidden" id="workout-json-${idx}" value='${JSON.stringify(workout.data)}'>
+                    <div class="workout-export-buttons">
+                        <button class="btn-export" onclick="downloadWorkoutJson(${idx}, '${escapedName}')">下載 JSON</button>
                         ${workout.type === 'bike' ? `
-                            <button class="btn-trainer-export" onclick="downloadWorkoutZwo(${idx}, '${escapedName}')">下載 ZWO</button>
-                            <button class="btn-trainer-export" onclick="downloadWorkoutErg(${idx}, '${escapedName}')">下載 ERG</button>
+                            <button class="btn-export btn-export-zwo" onclick="downloadWorkoutZwo(${idx}, '${escapedName}')">下載 ZWO</button>
+                            <button class="btn-export btn-export-erg" onclick="downloadWorkoutErg(${idx}, '${escapedName}')">下載 ERG</button>
                         ` : ''}
                     </div>
                 </div>
@@ -2164,40 +2158,17 @@ function closeWorkoutModal() {
     document.body.style.overflow = '';
 }
 
-// Copy workout JSON to clipboard
-function copyWorkoutJson(idx, btn) {
-    const textarea = document.getElementById(`workout-json-${idx}`);
-    textarea.select();
-    document.execCommand('copy');
-
-    const originalText = btn.textContent;
-    btn.textContent = '已複製!';
-    btn.classList.add('copied');
-    setTimeout(() => {
-        btn.textContent = originalText;
-        btn.classList.remove('copied');
-    }, 2000);
-}
-
 // Download workout JSON as file
 function downloadWorkoutJson(idx, filename) {
-    const textarea = document.getElementById(`workout-json-${idx}`);
-    const json = textarea.value;
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const input = document.getElementById(`workout-json-${idx}`);
+    const json = JSON.stringify(JSON.parse(input.value), null, 2);
+    downloadFile(json, `${filename.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.json`, 'application/json');
 }
 
 // Download workout as ZWO file (Zwift format)
 function downloadWorkoutZwo(idx, filename) {
-    const textarea = document.getElementById(`workout-json-${idx}`);
-    const workout = JSON.parse(textarea.value);
+    const input = document.getElementById(`workout-json-${idx}`);
+    const workout = JSON.parse(input.value);
     const ftp = parseInt(localStorage.getItem('userFtp')) || 200;
 
     let zwoContent = `<workout_file>
@@ -2266,8 +2237,8 @@ function convertStepToZwoElement(step, ftp, indent) {
 
 // Download workout as ERG file (MRC/ERG format for trainers)
 function downloadWorkoutErg(idx, filename) {
-    const textarea = document.getElementById(`workout-json-${idx}`);
-    const workout = JSON.parse(textarea.value);
+    const input = document.getElementById(`workout-json-${idx}`);
+    const workout = JSON.parse(input.value);
     const ftp = parseInt(localStorage.getItem('userFtp')) || 200;
 
     let ergContent = `[COURSE HEADER]
