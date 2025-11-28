@@ -23,10 +23,11 @@
 ## 功能特色
 
 - **16 週訓練計劃** - 完整的週期化訓練安排
+- **個人化設定** - 設定 FTP、體重、跑步配速、游泳 CSS，產生客製化訓練強度
 - **比賽倒數計時** - 即時顯示距離比賽剩餘時間
 - **每日訓練顯示** - 自動顯示當天訓練內容
 - **訓練週期圖表** - Chart.js 視覺化呈現訓練量
-- **Garmin Connect 整合** - 直接匯入訓練至 Garmin 手錶
+- **Garmin Connect 整合** - 直接匯入訓練至 Garmin 手錶，含功率/配速強度目標
 - **響應式設計** - 完整支援桌面與行動裝置
 
 ---
@@ -62,7 +63,8 @@
 │       ├── login.js
 │       ├── logout.js
 │       ├── import.js
-│       └── workout.js
+│       ├── workout.js
+│       └── workout_api.md  # Garmin Workout API 規格文件
 ├── images/             # 運動圖示
 └── vercel.json         # Vercel 部署配置
 ```

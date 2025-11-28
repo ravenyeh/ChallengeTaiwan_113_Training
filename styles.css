@@ -326,10 +326,12 @@ body {
     backdrop-filter: blur(10px);
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    max-width: 580px;
+    max-width: 700px;
+    width: 100%;
     margin-left: auto;
     margin-right: auto;
     text-align: left;
+    box-sizing: border-box;
 }
 
 .today-training-header {
@@ -350,6 +352,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
 }
 
 .today-tags {
@@ -394,6 +397,8 @@ body {
     font-size: 0.95rem;
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.9);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .today-stats {
@@ -401,6 +406,7 @@ body {
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 10px;
+    justify-content: flex-start;
 }
 
 .today-stat {
@@ -421,10 +427,11 @@ body {
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.6);
     text-align: center;
     font-style: italic;
+    word-wrap: break-word;
 }
 
 .today-actions {
