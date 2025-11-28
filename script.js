@@ -435,23 +435,7 @@ function saveUserSettings(settings) {
 
 // Show settings saved confirmation message
 function showSettingsSavedMessage() {
-    // Create toast notification
-    const toast = document.createElement('div');
-    toast.className = 'settings-toast';
-    toast.innerHTML = `
-        <span class="toast-icon">✓</span>
-        <span class="toast-message">課表內容已更新</span>
-    `;
-    document.body.appendChild(toast);
-
-    // Trigger animation
-    setTimeout(() => toast.classList.add('show'), 10);
-
-    // Remove after 3 seconds
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    alert('課表更新完成！');
 }
 
 // Update settings display
