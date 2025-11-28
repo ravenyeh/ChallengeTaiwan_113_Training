@@ -433,6 +433,15 @@ function saveUserSettings(settings) {
     showSettingsSavedMessage();
 }
 
+// Close settings modal (defined early for use in showSettingsSavedMessage)
+function closeSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+}
+
 // Show settings saved confirmation message and update summary banner
 function showSettingsSavedMessage() {
     // Close settings modal
@@ -2609,15 +2618,6 @@ function openSettingsModal() {
     if (modal) {
         modal.classList.add('show');
         document.body.style.overflow = 'hidden';
-    }
-}
-
-// Close settings modal
-function closeSettingsModal() {
-    const modal = document.getElementById('settingsModal');
-    if (modal) {
-        modal.classList.remove('show');
-        document.body.style.overflow = '';
     }
 }
 
