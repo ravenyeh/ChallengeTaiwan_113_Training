@@ -2544,19 +2544,18 @@ body {
     border-radius: 15px;
 }
 
-.workout-actions-row {
+.workout-export-buttons {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 15px;
+    gap: 8px;
+    margin-top: 12px;
     flex-wrap: wrap;
 }
 
-.btn-trainer-export {
+.btn-export {
     padding: 6px 14px;
-    border: 1px solid var(--bike-color);
+    border: 1px solid var(--primary-color);
     background: transparent;
-    color: var(--bike-color);
+    color: var(--primary-color);
     border-radius: 16px;
     font-size: 0.8rem;
     font-weight: 600;
@@ -2564,44 +2563,29 @@ body {
     transition: var(--transition);
 }
 
-.btn-trainer-export:hover {
+.btn-export:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-export-zwo {
+    border-color: var(--bike-color);
+    color: var(--bike-color);
+}
+
+.btn-export-zwo:hover {
     background: var(--bike-color);
     color: white;
 }
 
-.workout-json-details {
-    flex: 0 0 auto;
+.btn-export-erg {
+    border-color: #9c27b0;
+    color: #9c27b0;
 }
 
-.workout-json-details summary {
-    cursor: pointer;
-    color: var(--primary-color);
-    font-weight: 600;
-    font-size: 0.9rem;
-    padding: 8px 0;
-}
-
-.workout-json-details summary:hover {
-    text-decoration: underline;
-}
-
-.workout-json {
-    width: 100%;
-    margin-top: 10px;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 0.75rem;
-    line-height: 1.4;
-    background: #fafafa;
-    resize: vertical;
-}
-
-.json-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
+.btn-export-erg:hover {
+    background: #9c27b0;
+    color: white;
 }
 
 .btn-copy, .btn-download {
