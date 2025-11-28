@@ -424,7 +424,7 @@ function saveUserSettings(settings) {
     populateSchedule();
 
     // Update today's training display
-    updateTodayTraining();
+    displayTodayTraining();
 
     const pwr = getPowerToWeightRatio();
     console.log(`Settings updated - FTP: ${userFTP}W, Weight: ${userWeight}kg, PWR: ${pwr}W/kg, Run: ${userRunPace}/km, Swim CSS: ${userSwimCSS}/100m, Run VO2max: ${userRunVO2max || 'N/A'}, Bike VO2max: ${userBikeVO2max || 'N/A'}`);
