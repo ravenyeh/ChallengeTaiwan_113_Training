@@ -1,0 +1,207 @@
+{
+  "workoutId": null,
+  "ownerId": null,
+  "workoutName": "Day 31 自行車 - 建構期",
+  "description": "自行車：50km (含 3x10分鐘 @ Sweet Spot, 休5分鐘)\n\nSweet Spot: 167-179W",
+  "sportType": {
+    "sportTypeId": 2,
+    "sportTypeKey": "cycling"
+  },
+  "workoutSegments": [
+    {
+      "segmentOrder": 1,
+      "sportType": {
+        "sportTypeId": 2,
+        "sportTypeKey": "cycling"
+      },
+      "workoutSteps": [
+        {
+          "type": "ExecutableStepDTO",
+          "stepId": 1,
+          "stepOrder": 1,
+          "childStepId": null,
+          "stepType": {
+            "stepTypeId": 1,
+            "stepTypeKey": "warmup"
+          },
+          "targetType": {
+            "workoutTargetTypeId": 1,
+            "workoutTargetTypeKey": "no.target"
+          },
+          "targetValueOne": null,
+          "targetValueTwo": null,
+          "description": "熱身 10分鐘 - 漸進提升至 105W",
+          "endCondition": {
+            "conditionTypeId": 2,
+            "conditionTypeKey": "time"
+          },
+          "endConditionValue": 600
+        },
+        {
+          "type": "RepeatGroupDTO",
+          "stepId": 2,
+          "stepOrder": 2,
+          "childStepId": null,
+          "stepType": {
+            "stepTypeId": 6,
+            "stepTypeKey": "repeat"
+          },
+          "targetType": {
+            "workoutTargetTypeId": 1,
+            "workoutTargetTypeKey": "no.target"
+          },
+          "targetValueOne": null,
+          "targetValueTwo": null,
+          "description": "3x1分鐘 高迴轉激活",
+          "numberOfIterations": 3,
+          "workoutSteps": [
+            {
+              "type": "ExecutableStepDTO",
+              "stepId": 3,
+              "stepOrder": 1,
+              "childStepId": null,
+              "stepType": {
+                "stepTypeId": 3,
+                "stepTypeKey": "interval"
+              },
+              "targetType": {
+                "workoutTargetTypeId": 2,
+                "workoutTargetTypeKey": "power.zone"
+              },
+              "targetValueOne": 143,
+              "targetValueTwo": 171,
+              "secondaryTargetType": {
+                "workoutTargetTypeId": 3,
+                "workoutTargetTypeKey": "cadence.zone"
+              },
+              "secondaryTargetValueOne": 100,
+              "secondaryTargetValueTwo": 110,
+              "description": "高迴轉激活 143-171W @100-110rpm",
+              "endCondition": {
+                "conditionTypeId": 2,
+                "conditionTypeKey": "time"
+              },
+              "endConditionValue": 60
+            },
+            {
+              "type": "ExecutableStepDTO",
+              "stepId": 4,
+              "stepOrder": 2,
+              "childStepId": null,
+              "stepType": {
+                "stepTypeId": 5,
+                "stepTypeKey": "rest"
+              },
+              "targetType": {
+                "workoutTargetTypeId": 1,
+                "workoutTargetTypeKey": "no.target"
+              },
+              "targetValueOne": null,
+              "targetValueTwo": null,
+              "endCondition": {
+                "conditionTypeId": 2,
+                "conditionTypeKey": "time"
+              },
+              "endConditionValue": 60
+            }
+          ]
+        },
+        {
+          "type": "RepeatGroupDTO",
+          "stepId": 5,
+          "stepOrder": 3,
+          "childStepId": null,
+          "stepType": {
+            "stepTypeId": 6,
+            "stepTypeKey": "repeat"
+          },
+          "targetType": {
+            "workoutTargetTypeId": 1,
+            "workoutTargetTypeKey": "no.target"
+          },
+          "targetValueOne": null,
+          "targetValueTwo": null,
+          "description": "3x10分鐘 Sweet Spot 167-179W",
+          "numberOfIterations": 3,
+          "workoutSteps": [
+            {
+              "type": "ExecutableStepDTO",
+              "stepId": 6,
+              "stepOrder": 1,
+              "childStepId": null,
+              "stepType": {
+                "stepTypeId": 3,
+                "stepTypeKey": "interval"
+              },
+              "targetType": {
+                "workoutTargetTypeId": 2,
+                "workoutTargetTypeKey": "power.zone"
+              },
+              "targetValueOne": 167,
+              "targetValueTwo": 179,
+              "secondaryTargetType": {
+                "workoutTargetTypeId": 3,
+                "workoutTargetTypeKey": "cadence.zone"
+              },
+              "secondaryTargetValueOne": 85,
+              "secondaryTargetValueTwo": 95,
+              "description": "Sweet Spot 167-179W (88-94% FTP) @85-95rpm",
+              "endCondition": {
+                "conditionTypeId": 2,
+                "conditionTypeKey": "time"
+              },
+              "endConditionValue": 600
+            },
+            {
+              "type": "ExecutableStepDTO",
+              "stepId": 7,
+              "stepOrder": 2,
+              "childStepId": null,
+              "stepType": {
+                "stepTypeId": 5,
+                "stepTypeKey": "rest"
+              },
+              "targetType": {
+                "workoutTargetTypeId": 2,
+                "workoutTargetTypeKey": "power.zone"
+              },
+              "targetValueOne": 86,
+              "targetValueTwo": 105,
+              "description": "恢復 4分鐘 @ 86-105W",
+              "endCondition": {
+                "conditionTypeId": 2,
+                "conditionTypeKey": "time"
+              },
+              "endConditionValue": 240
+            }
+          ]
+        },
+        {
+          "type": "ExecutableStepDTO",
+          "stepId": 8,
+          "stepOrder": 4,
+          "childStepId": null,
+          "stepType": {
+            "stepTypeId": 2,
+            "stepTypeKey": "cooldown"
+          },
+          "targetType": {
+            "workoutTargetTypeId": 1,
+            "workoutTargetTypeKey": "no.target"
+          },
+          "targetValueOne": null,
+          "targetValueTwo": null,
+          "description": "緩和 10分鐘 - 漸進降低強度",
+          "endCondition": {
+            "conditionTypeId": 2,
+            "conditionTypeKey": "time"
+          },
+          "endConditionValue": 600
+        }
+      ]
+    }
+  ],
+  "estimatedDurationInSecs": 6000,
+  "estimatedDistanceInMeters": 50000,
+  "scheduledDate": "2026-02-04"
+}
