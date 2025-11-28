@@ -416,10 +416,42 @@ function saveUserSettings(settings) {
         userBikeVO2max = parseFloat(settings.bikeVO2max);
         localStorage.setItem('userBikeVO2max', userBikeVO2max);
     }
+    // Regenerate workouts with new settings
     generateAllWorkouts();
     updateSettingsDisplay();
+
+    // Refresh schedule table to show updated pace/power values
+    populateSchedule();
+
+    // Update today's training display
+    updateTodayTraining();
+
     const pwr = getPowerToWeightRatio();
     console.log(`Settings updated - FTP: ${userFTP}W, Weight: ${userWeight}kg, PWR: ${pwr}W/kg, Run: ${userRunPace}/km, Swim CSS: ${userSwimCSS}/100m, Run VO2max: ${userRunVO2max || 'N/A'}, Bike VO2max: ${userBikeVO2max || 'N/A'}`);
+
+    // Show confirmation to user
+    showSettingsSavedMessage();
+}
+
+// Show settings saved confirmation message
+function showSettingsSavedMessage() {
+    // Create toast notification
+    const toast = document.createElement('div');
+    toast.className = 'settings-toast';
+    toast.innerHTML = `
+        <span class="toast-icon">✓</span>
+        <span class="toast-message">課表內容已更新</span>
+    `;
+    document.body.appendChild(toast);
+
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
 // Update settings display
@@ -931,6 +963,22 @@ function resetStepIdCounter() {
     stepIdCounter = 0;
 }
 
+// Calculate swim pace target in seconds per 100m
+function getSwimPaceTarget(zoneType) {
+    if (!userSwimCSS) return null;
+    const cssSeconds = parsePaceToSeconds(userSwimCSS);
+    const paceMultipliers = {
+        'recovery': 1.20,    // 恢復游 +20%
+        'technique': 1.15,   // 技術 +15%
+        'aerobic': 1.05,     // 有氧 +5%
+        'threshold': 1.00,   // CSS配速
+        'interval': 0.95,    // 間歇 -5%
+        'sprint': 0.90       // 衝刺 -10%
+    };
+    const multiplier = paceMultipliers[zoneType] || 1.0;
+    return Math.round(cssSeconds * multiplier);
+}
+
 // Generate swim workout steps
 function generateSwimSteps(totalDistance, content) {
     const steps = [];
@@ -938,24 +986,75 @@ function generateSwimSteps(totalDistance, content) {
 
     // Check for intervals pattern like "6x400m" or "10x200m"
     const intervalMatch = content.match(/(\d+)\s*[xX×]\s*(\d+)m/);
+    // Check for drill/technique content
+    const hasTechnique = content.includes('技術') || content.includes('划手');
+    const hasDrill = content.includes('踢水') || content.includes('分解');
 
     if (intervalMatch) {
         const reps = parseInt(intervalMatch[1]);
         const distance = parseInt(intervalMatch[2]);
-        const warmupDistance = Math.round((totalDistance - reps * distance) / 2);
+        const mainSetDistance = reps * distance;
+        const remainingDistance = totalDistance - mainSetDistance;
+        const warmupDistance = Math.min(Math.round(remainingDistance * 0.6), 400);
+        const cooldownDistance = Math.max(remainingDistance - warmupDistance, 200);
 
-        // Warmup
-        if (warmupDistance > 0) {
+        // Warmup: 混合式熱身
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: Math.round(warmupDistance * 0.5),
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '輕鬆游熱身'
+        });
+
+        // Drill set if technique day
+        if (hasTechnique || hasDrill) {
             steps.push({
                 stepOrder: stepOrder++,
-                stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
-                endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-                endConditionValue: warmupDistance,
-                targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+                numberOfIterations: 4,
+                workoutSteps: [
+                    {
+                        stepOrder: 1,
+                        stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                        endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                        endConditionValue: 50,
+                        targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                        description: '技術練習 (划手/踢水)'
+                    },
+                    {
+                        stepOrder: 2,
+                        stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                        endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                        endConditionValue: 15,
+                        targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                    }
+                ],
+                description: '4x50m 技術分解練習'
             });
         }
 
-        // Interval repeat
+        // Pre-set: 漸速游
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: 4,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: 25,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: '漸速游 (由慢到快)'
+                }
+            ],
+            description: '4x25m 漸速游'
+        });
+
+        // Main set: Interval repeat
+        const restTime = distance >= 400 ? 45 : distance >= 200 ? 30 : 20;
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
@@ -966,78 +1065,284 @@ function generateSwimSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: distance,
-                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: `主課表 ${distance}m @ CSS配速`
                 },
                 {
                     stepOrder: 2,
                     stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
-                    endConditionValue: 30,
+                    endConditionValue: restTime,
                     targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
                 }
-            ]
+            ],
+            description: `${reps}x${distance}m 主課表 (休息${restTime}秒)`
         });
 
         // Cooldown
-        if (warmupDistance > 0) {
-            steps.push({
-                stepOrder: stepOrder++,
-                stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
-                endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-                endConditionValue: warmupDistance,
-                targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
-            });
-        }
-    } else {
-        // Simple distance swim
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: cooldownDistance,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和游'
+        });
+
+    } else if (content.includes('技術課') || content.includes('技術訓練')) {
+        // Technical/Drill focused session
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-            endConditionValue: Math.round(totalDistance * 0.2),
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            endConditionValue: 300,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '輕鬆游熱身'
+        });
+
+        // Kick drills
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: 4,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: 50,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: '踢水練習'
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 15,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                }
+            ],
+            description: '4x50m 踢水'
+        });
+
+        // Pull drills
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: 4,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: 50,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: '划手練習 (夾浮板)'
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 15,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                }
+            ],
+            description: '4x50m 划手'
+        });
+
+        // Swim focus
+        const remainingDistance = totalDistance - 700;
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: Math.max(Math.round(remainingDistance / 100), 4),
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: 100,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: '專注划頻與流線型'
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 20,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                }
+            ],
+            description: '100m 技術整合'
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: 200,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和游'
+        });
+
+    } else if (content.includes('恢復') || content.includes('輕鬆')) {
+        // Recovery swim
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: 200,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '輕鬆游熱身'
         });
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-            endConditionValue: Math.round(totalDistance * 0.6),
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            endConditionValue: totalDistance - 400,
+            targetType: { workoutTargetTypeId: 4, workoutTargetTypeKey: 'heart.rate.zone' },
+            zoneNumber: 1,
+            description: '恢復游 - 保持輕鬆划頻'
         });
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-            endConditionValue: Math.round(totalDistance * 0.2),
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            endConditionValue: 200,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和游'
+        });
+
+    } else {
+        // Standard aerobic swim
+        const warmupDist = Math.round(totalDistance * 0.15);
+        const mainSetDist = Math.round(totalDistance * 0.70);
+        const cooldownDist = totalDistance - warmupDist - mainSetDist;
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: warmupDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '混合式熱身 (自由式為主)'
+        });
+
+        // Main set in 100m blocks
+        const reps = Math.round(mainSetDist / 100);
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: reps,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: 100,
+                    targetType: { workoutTargetTypeId: 4, workoutTargetTypeKey: 'heart.rate.zone' },
+                    zoneNumber: 2,
+                    description: '有氧游 Z2'
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 15,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                }
+            ],
+            description: `${reps}x100m 有氧游`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: cooldownDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和游'
         });
     }
 
     return steps;
 }
 
+// Get FTP-based power zones
+function getBikePowerZones() {
+    const ftp = userFTP || 200;
+    return {
+        Z1: { low: Math.round(ftp * 0.45), high: Math.round(ftp * 0.55), name: '恢復' },
+        Z2: { low: Math.round(ftp * 0.55), high: Math.round(ftp * 0.75), name: '耐力' },
+        Z3: { low: Math.round(ftp * 0.75), high: Math.round(ftp * 0.90), name: '節奏' },
+        SS: { low: Math.round(ftp * 0.88), high: Math.round(ftp * 0.94), name: 'Sweet Spot' },
+        Z4: { low: Math.round(ftp * 0.90), high: Math.round(ftp * 1.05), name: '閾值' },
+        Z5: { low: Math.round(ftp * 1.05), high: Math.round(ftp * 1.20), name: 'VO2max' },
+        Z6: { low: Math.round(ftp * 1.20), high: Math.round(ftp * 1.50), name: '無氧' }
+    };
+}
+
 // Generate bike workout steps
 function generateBikeSteps(totalDistance, content) {
     const steps = [];
     let stepOrder = 1;
+    const zones = getBikePowerZones();
+    const ftp = userFTP || 200;
 
     // Check for Sweet Spot intervals
     const ssMatch = content.match(/(\d+)\s*[xX×]\s*(\d+)\s*分鐘.*Sweet\s*Spot/i);
+    // Check for FTP intervals
+    const ftpMatch = content.match(/(\d+)\s*[xX×]\s*(\d+)\s*分鐘.*FTP/i);
+    // Check for VO2max intervals
+    const vo2Match = content.match(/(\d+)\s*[xX×]\s*(\d+)\s*分鐘.*VO2/i);
 
-    if (ssMatch) {
-        const reps = parseInt(ssMatch[1]);
-        const minutes = parseInt(ssMatch[2]);
+    if (ssMatch || content.includes('Sweet Spot')) {
+        // Sweet Spot workout
+        const reps = ssMatch ? parseInt(ssMatch[1]) : 3;
+        const minutes = ssMatch ? parseInt(ssMatch[2]) : 10;
+        const restMinutes = minutes >= 15 ? 5 : minutes >= 10 ? 4 : 3;
 
-        // Warmup - 20% of total
+        // Warmup with progressive build
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
-            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-            endConditionValue: Math.round(totalDistance * 0.15),
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+            endConditionValue: 600, // 10 min
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `熱身 10分鐘 - 漸進提升至 ${zones.Z2.low}W`
         });
 
-        // Sweet Spot intervals
+        // Activation - high cadence spins
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: 3,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 60,
+                    targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: zones.Z3.low,
+                    targetValueTwo: zones.Z3.high,
+                    secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+                    secondaryTargetValueOne: 100,
+                    secondaryTargetValueTwo: 110,
+                    description: `高迴轉激活 ${zones.Z3.low}-${zones.Z3.high}W @100-110rpm`
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 60,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                }
+            ],
+            description: '3x1分鐘 高迴轉激活'
+        });
+
+        // Main set: Sweet Spot intervals
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
@@ -1049,79 +1354,357 @@ function generateBikeSteps(totalDistance, content) {
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: minutes * 60,
                     targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
-                    targetValueOne: 88,
-                    targetValueTwo: 94,
-                    zoneNumber: 4
+                    targetValueOne: zones.SS.low,
+                    targetValueTwo: zones.SS.high,
+                    secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+                    secondaryTargetValueOne: 85,
+                    secondaryTargetValueTwo: 95,
+                    description: `Sweet Spot ${zones.SS.low}-${zones.SS.high}W (${Math.round(zones.SS.low/ftp*100)}-${Math.round(zones.SS.high/ftp*100)}% FTP) @85-95rpm`
                 },
                 {
                     stepOrder: 2,
                     stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
-                    endConditionValue: 300,
-                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                    endConditionValue: restMinutes * 60,
+                    targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: zones.Z1.low,
+                    targetValueTwo: zones.Z1.high,
+                    description: `恢復 ${restMinutes}分鐘 @ ${zones.Z1.low}-${zones.Z1.high}W`
                 }
-            ]
+            ],
+            description: `${reps}x${minutes}分鐘 Sweet Spot ${zones.SS.low}-${zones.SS.high}W`
         });
 
         // Cooldown
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
-            endCondition: { conditionTypeId: 1, conditionTypeKey: 'lap.button' },
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+            endConditionValue: 600,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和 10分鐘 - 漸進降低強度'
         });
-    } else {
-        // Simple distance ride (Z2)
+
+    } else if (ftpMatch || content.includes('FTP') || content.includes('閾值')) {
+        // FTP/Threshold workout
+        const reps = ftpMatch ? parseInt(ftpMatch[1]) : 2;
+        const minutes = ftpMatch ? parseInt(ftpMatch[2]) : 20;
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+            endConditionValue: 900, // 15 min
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '熱身 15分鐘 - 漸進提升'
+        });
+
+        // Build-ups
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: 3,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 30,
+                    targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: zones.Z4.low,
+                    targetValueTwo: zones.Z4.high,
+                    description: `漸速 30秒 @ ${zones.Z4.low}-${zones.Z4.high}W`
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 90,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                }
+            ],
+            description: '3x30秒 漸速提升'
+        });
+
+        // Main set: FTP intervals
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: reps,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: minutes * 60,
+                    targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: zones.Z4.low,
+                    targetValueTwo: ftp,
+                    secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+                    secondaryTargetValueOne: 85,
+                    secondaryTargetValueTwo: 95,
+                    description: `FTP 間歇 ${zones.Z4.low}-${ftp}W (90-100% FTP) @85-95rpm`
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: Math.round(minutes * 60 * 0.5),
+                    targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: zones.Z1.low,
+                    targetValueTwo: zones.Z2.low,
+                    description: `恢復 @ ${zones.Z1.low}-${zones.Z2.low}W`
+                }
+            ],
+            description: `${reps}x${minutes}分鐘 FTP ${zones.Z4.low}-${ftp}W`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+            endConditionValue: 600,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和 10分鐘'
+        });
+
+    } else if (content.includes('長騎') || content.includes('長距離') || totalDistance >= 80000) {
+        // Long endurance ride
+        const warmupDist = 10000; // 10km
+        const cooldownDist = 5000; // 5km
+        const mainDist = totalDistance - warmupDist - cooldownDist;
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: warmupDist,
+            targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+            targetValueOne: zones.Z1.low,
+            targetValueTwo: zones.Z2.low,
+            description: `熱身 10km @ ${zones.Z1.low}-${zones.Z2.low}W`
+        });
+
+        // Main aerobic blocks
+        const blockDistance = 20000; // 20km blocks
+        const blocks = Math.floor(mainDist / blockDistance);
+
+        for (let i = 0; i < blocks; i++) {
+            steps.push({
+                stepOrder: stepOrder++,
+                stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                endConditionValue: blockDistance,
+                targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+                targetValueOne: zones.Z2.low,
+                targetValueTwo: zones.Z2.high,
+                secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+                secondaryTargetValueOne: 85,
+                secondaryTargetValueTwo: 95,
+                description: `Z2 耐力區 ${zones.Z2.low}-${zones.Z2.high}W (${i+1}/${blocks})`
+            });
+        }
+
+        // Remaining distance
+        const remainingDist = mainDist - (blocks * blockDistance);
+        if (remainingDist > 0) {
+            steps.push({
+                stepOrder: stepOrder++,
+                stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                endConditionValue: remainingDist,
+                targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+                targetValueOne: zones.Z2.low,
+                targetValueTwo: zones.Z2.high,
+                description: `Z2 耐力區 ${zones.Z2.low}-${zones.Z2.high}W`
+            });
+        }
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: cooldownDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和 5km'
+        });
+
+    } else if (content.includes('恢復') || content.includes('輕鬆')) {
+        // Recovery ride
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: Math.round(totalDistance * 0.1),
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '輕鬆熱身'
         });
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: Math.round(totalDistance * 0.8),
-            targetType: { workoutTargetTypeId: 4, workoutTargetTypeKey: 'heart.rate.zone' },
-            zoneNumber: 2
+            targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+            targetValueOne: zones.Z1.low,
+            targetValueTwo: zones.Z1.high,
+            secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+            secondaryTargetValueOne: 85,
+            secondaryTargetValueTwo: 100,
+            description: `恢復騎 ${zones.Z1.low}-${zones.Z1.high}W - 保持高迴轉`
         });
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: Math.round(totalDistance * 0.1),
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和'
+        });
+
+    } else {
+        // Standard Z2 ride with some tempo
+        const warmupDist = Math.round(totalDistance * 0.1);
+        const cooldownDist = Math.round(totalDistance * 0.1);
+        const mainDist = totalDistance - warmupDist - cooldownDist;
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: warmupDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '熱身 - 漸進提升強度'
+        });
+
+        // Main Z2 with tempo surges
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: Math.round(mainDist * 0.7),
+            targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+            targetValueOne: zones.Z2.low,
+            targetValueTwo: zones.Z2.high,
+            secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+            secondaryTargetValueOne: 85,
+            secondaryTargetValueTwo: 95,
+            description: `Z2 有氧騎 ${zones.Z2.low}-${zones.Z2.high}W @85-95rpm`
+        });
+
+        // Add some tempo work
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: 3,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 180,
+                    targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: zones.Z3.low,
+                    targetValueTwo: zones.Z3.high,
+                    description: `節奏提升 ${zones.Z3.low}-${zones.Z3.high}W`
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 120,
+                    targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: zones.Z2.low,
+                    targetValueTwo: zones.Z2.high,
+                    description: `恢復 @ Z2`
+                }
+            ],
+            description: `3x3分鐘 節奏 ${zones.Z3.low}-${zones.Z3.high}W`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: cooldownDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和'
         });
     }
 
     return steps;
 }
 
+// Get marathon pace-based run zones (in seconds per km)
+function getRunPaceZones() {
+    const marathonPaceSeconds = userRunPace ? parsePaceToSeconds(userRunPace) : 360; // default 6:00/km
+    return {
+        recovery: { pace: Math.round(marathonPaceSeconds * 1.25), name: '恢復跑' },    // +25%
+        easy: { pace: Math.round(marathonPaceSeconds * 1.15), name: '輕鬆跑' },        // +15%
+        long: { pace: Math.round(marathonPaceSeconds * 1.10), name: '長跑配速' },      // +10%
+        marathon: { pace: marathonPaceSeconds, name: '馬拉松配速' },                   // MP
+        tempo: { pace: Math.round(marathonPaceSeconds * 0.95), name: '節奏跑' },       // -5%
+        threshold: { pace: Math.round(marathonPaceSeconds * 0.90), name: '閾值跑' },   // -10%
+        interval: { pace: Math.round(marathonPaceSeconds * 0.85), name: '間歇配速' },  // -15%
+        rep: { pace: Math.round(marathonPaceSeconds * 0.80), name: '重複跑' }          // -20%
+    };
+}
+
 // Generate run workout steps
 function generateRunSteps(totalDistance, content) {
     const steps = [];
     let stepOrder = 1;
+    const zones = getRunPaceZones();
+    const mp = userRunPace || '6:00';
 
-    // Check for interval pattern like "8x1km" or "6x1.2km"
-    const intervalMatch = content.match(/(\d+)\s*[xX×]\s*([\d.]+)\s*km/i);
+    // Check for interval pattern like "8x1km" or "6x1.2km" or "10x400m"
+    const intervalMatch = content.match(/(\d+)\s*[xX×]\s*([\d.]+)\s*(km|m)/i);
+    // Check for brick workout (bike then run)
+    const isBrick = content.includes('磚式') || content.includes('騎轉跑');
 
     if (intervalMatch) {
         const reps = parseInt(intervalMatch[1]);
-        const distanceKm = parseFloat(intervalMatch[2]);
-        const intervalDistance = distanceKm * 1000;
+        const distanceValue = parseFloat(intervalMatch[2]);
+        const unit = intervalMatch[3].toLowerCase();
+        const intervalDistance = unit === 'km' ? distanceValue * 1000 : distanceValue;
+        const restTime = intervalDistance >= 1000 ? 90 : intervalDistance >= 400 ? 60 : 45;
 
-        // Warmup
+        // Warmup with dynamic stretching
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-            endConditionValue: 3000,
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            endConditionValue: 2000,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `熱身慢跑 2km @ ${formatSecondsToPace(zones.easy.pace)}/km`
         });
 
-        // Intervals
+        // Strides/activation
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: 4,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: 100,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: '漸速跑 100m (由慢到快)'
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: 100,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: '慢走恢復 100m'
+                }
+            ],
+            description: '4x100m 漸速跑激活'
+        });
+
+        // Main intervals
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
@@ -1132,17 +1715,19 @@ function generateRunSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: intervalDistance,
-                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'pace.zone' },
-                    zoneNumber: 4
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: `間歇 ${intervalDistance >= 1000 ? (intervalDistance/1000) + 'km' : intervalDistance + 'm'} @ ${formatSecondsToPace(zones.interval.pace)}/km`
                 },
                 {
                     stepOrder: 2,
                     stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
-                    endConditionValue: 90,
-                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+                    endConditionValue: restTime,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: `休息 ${restTime}秒 (慢跑或站立)`
                 }
-            ]
+            ],
+            description: `${reps}x${intervalDistance >= 1000 ? (intervalDistance/1000) + 'km' : intervalDistance + 'm'} @ ${formatSecondsToPace(zones.interval.pace)}/km`
         });
 
         // Cooldown
@@ -1151,55 +1736,227 @@ function generateRunSteps(totalDistance, content) {
             stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: 2000,
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `緩和慢跑 2km @ ${formatSecondsToPace(zones.recovery.pace)}/km`
         });
-    } else if (content.includes('節奏跑') || content.includes('T配速')) {
+
+    } else if (content.includes('節奏跑') || content.includes('T配速') || content.includes('閾值')) {
         // Tempo run
+        const tempoDistance = totalDistance >= 10000 ? 6000 : Math.round((totalDistance - 4000) * 0.8);
+
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: 2000,
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `熱身 2km @ ${formatSecondsToPace(zones.easy.pace)}/km`
         });
+
+        // Drills
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: 3,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: 100,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: '漸速跑激活'
+                }
+            ],
+            description: '3x100m 漸速跑'
+        });
+
+        // Tempo main set
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-            endConditionValue: totalDistance - 4000,
-            targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'pace.zone' },
-            zoneNumber: 3
+            endConditionValue: tempoDistance,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `節奏跑 ${tempoDistance/1000}km @ ${formatSecondsToPace(zones.tempo.pace)}/km (馬拉松配速-5%)`
         });
+
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-            endConditionValue: 2000,
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            endConditionValue: totalDistance - tempoDistance - 2300,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `緩和跑 @ ${formatSecondsToPace(zones.recovery.pace)}/km`
         });
-    } else {
-        // Easy/long run
+
+    } else if (content.includes('長跑') || totalDistance >= 15000) {
+        // Long run
+        const warmupDist = 2000;
+        const cooldownDist = 1000;
+        const mainDist = totalDistance - warmupDist - cooldownDist;
+
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-            endConditionValue: Math.round(totalDistance * 0.1),
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            endConditionValue: warmupDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `熱身 2km - 漸進提升至長跑配速`
         });
+
+        // Progressive long run blocks
+        const firstHalf = Math.round(mainDist * 0.6);
+        const secondHalf = mainDist - firstHalf;
+
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-            endConditionValue: Math.round(totalDistance * 0.8),
+            endConditionValue: firstHalf,
             targetType: { workoutTargetTypeId: 4, workoutTargetTypeKey: 'heart.rate.zone' },
-            zoneNumber: 2
+            zoneNumber: 2,
+            description: `前半段 ${(firstHalf/1000).toFixed(1)}km @ ${formatSecondsToPace(zones.long.pace)}/km (Z2 心率)`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: secondHalf,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `後半段 ${(secondHalf/1000).toFixed(1)}km @ ${formatSecondsToPace(zones.marathon.pace)}/km (馬拉松配速)`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: cooldownDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `緩和 1km`
+        });
+
+    } else if (isBrick) {
+        // Brick run (off the bike)
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+            endConditionValue: 300, // 5 min
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `騎轉跑過渡期 5分鐘 - 適應腿部感覺`
+        });
+
+        // Main brick run - start conservative then build
+        const firstKm = 1000;
+        const mainPart = totalDistance - firstKm - 1000;
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: firstKm,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `第1km 保守起步 @ ${formatSecondsToPace(zones.long.pace + 15)}/km`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: mainPart,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `主課表 @ ${formatSecondsToPace(zones.marathon.pace)}/km 比賽配速`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: 1000,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和跑 1km'
+        });
+
+    } else if (content.includes('恢復') || content.includes('輕鬆')) {
+        // Recovery run
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: 1000,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '輕鬆熱身 1km'
+        });
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: totalDistance - 2000,
+            targetType: { workoutTargetTypeId: 4, workoutTargetTypeKey: 'heart.rate.zone' },
+            zoneNumber: 1,
+            description: `恢復跑 @ ${formatSecondsToPace(zones.recovery.pace)}/km - 保持輕鬆對話配速`
         });
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-            endConditionValue: Math.round(totalDistance * 0.1),
-            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
+            endConditionValue: 1000,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和 1km'
+        });
+
+    } else {
+        // Standard easy run with strides
+        const warmupDist = Math.min(Math.round(totalDistance * 0.15), 1500);
+        const cooldownDist = Math.min(Math.round(totalDistance * 0.1), 1000);
+        const mainDist = totalDistance - warmupDist - cooldownDist - 400; // -400 for strides
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: warmupDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `熱身 ${(warmupDist/1000).toFixed(1)}km @ ${formatSecondsToPace(zones.easy.pace)}/km`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: mainDist,
+            targetType: { workoutTargetTypeId: 4, workoutTargetTypeKey: 'heart.rate.zone' },
+            zoneNumber: 2,
+            description: `輕鬆跑 ${(mainDist/1000).toFixed(1)}km @ ${formatSecondsToPace(zones.easy.pace)}/km (Z2 心率)`
+        });
+
+        // Add strides at the end
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: 4,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: 100,
+                    targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                    description: '漸速跑 100m (提升步頻)'
+                }
+            ],
+            description: '4x100m 漸速跑 (保持跑姿)'
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: cooldownDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: `緩和 ${(cooldownDist/1000).toFixed(1)}km`
         });
     }
 
