@@ -2028,6 +2028,132 @@ function generateRunSteps(totalDistance, content) {
     return steps;
 }
 
+// Render Garmin-style workout steps preview
+function renderWorkoutStepsPreview(workoutData, sportType) {
+    if (!workoutData.workoutSegments || workoutData.workoutSegments.length === 0) {
+        return '';
+    }
+
+    let html = '<div class="steps-preview"><div class="steps-header">Steps</div>';
+
+    workoutData.workoutSegments.forEach(segment => {
+        if (segment.workoutSteps) {
+            segment.workoutSteps.forEach(step => {
+                html += renderStepItem(step, sportType);
+            });
+        }
+    });
+
+    html += '</div>';
+    return html;
+}
+
+// Render a single step item (handles both regular steps and repeat groups)
+function renderStepItem(step, sportType) {
+    const stepType = step.stepType?.workoutStepTypeKey || 'interval';
+
+    // Handle repeat groups
+    if (stepType === 'repeat' && step.workoutSteps) {
+        let html = `<div class="step-repeat-group">
+            <div class="repeat-header">${step.numberOfIterations || 2} Times</div>
+            <div class="repeat-steps">`;
+
+        step.workoutSteps.forEach(subStep => {
+            html += renderSingleStep(subStep, sportType);
+        });
+
+        html += '</div></div>';
+        return html;
+    }
+
+    return renderSingleStep(step, sportType);
+}
+
+// Render a single executable step
+function renderSingleStep(step, sportType) {
+    const stepType = step.stepType?.workoutStepTypeKey || 'interval';
+    const stepColors = {
+        'warmup': '#E2001A',      // Red
+        'interval': '#007AFF',    // Blue
+        'recovery': '#8E8E93',    // Gray
+        'rest': '#8E8E93',        // Gray
+        'cooldown': '#34C759'     // Green
+    };
+    const stepLabels = {
+        'warmup': 'Warm Up',
+        'interval': sportType === 'bike' ? 'Bike' : sportType === 'run' ? 'Run' : 'Swim',
+        'recovery': 'Recover',
+        'rest': 'Rest',
+        'cooldown': 'Cool Down'
+    };
+
+    const color = stepColors[stepType] || '#007AFF';
+    const label = stepLabels[stepType] || 'Interval';
+
+    // Format duration or distance
+    let durationText = '';
+    const endCondition = step.endCondition?.conditionTypeKey;
+    if (endCondition === 'time') {
+        const secs = step.endConditionValue || 0;
+        const mins = Math.floor(secs / 60);
+        const remainingSecs = secs % 60;
+        durationText = remainingSecs > 0 ? `${mins}:${String(remainingSecs).padStart(2, '0')}` : `${mins}:00`;
+    } else if (endCondition === 'distance') {
+        const meters = step.endConditionValue || 0;
+        durationText = meters >= 1000 ? `${(meters / 1000).toFixed(1)} km` : `${meters} m`;
+    } else if (endCondition === 'lap.button') {
+        durationText = 'Lap Button Press';
+    }
+
+    // Format target (power, pace, etc.)
+    let targetText = '';
+    const targetType = step.targetType?.workoutTargetTypeKey;
+    if (targetType === 'power.zone' && step.targetValueOne && step.targetValueTwo) {
+        targetText = `Custom Power · (${Math.round(step.targetValueOne)}-${Math.round(step.targetValueTwo)} W)`;
+    } else if (targetType === 'pace.zone' && step.targetValueOne && step.targetValueTwo) {
+        // Convert m/s to min/km or min/100m
+        const pace1 = step.targetValueOne > 0 ? Math.round(1000 / step.targetValueOne / 60 * 100) / 100 : 0;
+        const pace2 = step.targetValueTwo > 0 ? Math.round(1000 / step.targetValueTwo / 60 * 100) / 100 : 0;
+        if (sportType === 'swim') {
+            const p1 = formatPace(100 / step.targetValueOne);
+            const p2 = formatPace(100 / step.targetValueTwo);
+            targetText = `Pace · (${p2}-${p1} /100m)`;
+        } else {
+            const p1 = formatPace(1000 / step.targetValueOne);
+            const p2 = formatPace(1000 / step.targetValueTwo);
+            targetText = `Pace · (${p2}-${p1} /km)`;
+        }
+    }
+
+    // Format secondary target (cadence)
+    let cadenceText = '';
+    if (step.secondaryTargetType?.workoutTargetTypeKey === 'cadence.zone') {
+        cadenceText = `Cadence · ${Math.round(step.secondaryTargetValueOne || 0)}-${Math.round(step.secondaryTargetValueTwo || 0)} rpm`;
+    }
+
+    // Build step HTML
+    let html = `
+        <div class="step-item">
+            <div class="step-color-bar" style="background-color: ${color}"></div>
+            <div class="step-content">
+                <div class="step-label">${label}</div>
+                <div class="step-duration">${durationText}</div>
+                ${targetText ? `<div class="step-target">${targetText}</div>` : ''}
+                ${cadenceText ? `<div class="step-cadence">${cadenceText}</div>` : ''}
+            </div>
+        </div>
+    `;
+
+    return html;
+}
+
+// Helper: Format seconds to MM:SS pace
+function formatPace(totalSeconds) {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = Math.round(totalSeconds % 60);
+    return `${mins}:${String(secs).padStart(2, '0')}`;
+}
+
 // Show workout modal
 // overrideDate: if provided, the workouts will be scheduled for this date instead of training's original date
 function showWorkoutModal(dayIndex, overrideDate = null) {
@@ -2077,6 +2203,7 @@ function showWorkoutModal(dayIndex, overrideDate = null) {
             const typeColor = { swim: 'var(--swim-color)', bike: 'var(--bike-color)', run: 'var(--run-color)' }[workout.type];
 
             const escapedName = workout.data.workoutName.replace(/'/g, "\\'").replace(/"/g, '\\"');
+            const stepsPreview = renderWorkoutStepsPreview(workout.data, workout.type);
             html += `
                 <div class="workout-section" style="border-left: 4px solid ${typeColor}">
                     <div class="workout-header">
@@ -2084,11 +2211,11 @@ function showWorkoutModal(dayIndex, overrideDate = null) {
                         <span class="workout-type-label">${typeLabel}</span>
                     </div>
                     <div class="workout-name">${workout.data.workoutName}</div>
-                    <div class="workout-desc">${workout.data.description}</div>
                     <div class="workout-stats">
                         <span>距離: ${(workout.data.estimatedDistanceInMeters / 1000).toFixed(1)} km</span>
                         <span>預估時間: ${Math.round(workout.data.estimatedDurationInSecs / 60)} 分鐘</span>
                     </div>
+                    ${stepsPreview}
                     <input type="hidden" id="workout-json-${idx}" value='${JSON.stringify(workout.data)}'>
                     <div class="workout-export-buttons">
                         <button class="btn-export" onclick="downloadWorkoutJson(${idx}, '${escapedName}')">下載 JSON</button>
