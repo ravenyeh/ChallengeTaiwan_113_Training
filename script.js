@@ -2054,8 +2054,12 @@ function renderStepItem(step, sportType) {
 
     // Handle repeat groups
     if (stepType === 'repeat' && step.workoutSteps) {
+        const repeatDescription = step.description || '';
         let html = `<div class="step-repeat-group">
-            <div class="repeat-header">${step.numberOfIterations || 2} Times</div>
+            <div class="repeat-header">
+                <span class="repeat-times">${step.numberOfIterations || 2}x</span>
+                ${repeatDescription ? `<span class="repeat-description">${repeatDescription}</span>` : ''}
+            </div>
             <div class="repeat-steps">`;
 
         step.workoutSteps.forEach(subStep => {
@@ -2131,12 +2135,16 @@ function renderSingleStep(step, sportType) {
         cadenceText = `Cadence · ${Math.round(step.secondaryTargetValueOne || 0)}-${Math.round(step.secondaryTargetValueTwo || 0)} rpm`;
     }
 
+    // Format description
+    let descriptionText = step.description || '';
+
     // Build step HTML
     let html = `
-        <div class="step-item">
+        <div class="step-item step-type-${stepType}">
             <div class="step-color-bar" style="background-color: ${color}"></div>
             <div class="step-content">
                 <div class="step-label">${label}</div>
+                ${descriptionText ? `<div class="step-description">${descriptionText}</div>` : ''}
                 <div class="step-duration">${durationText}</div>
                 ${targetText ? `<div class="step-target">${targetText}</div>` : ''}
                 ${cadenceText ? `<div class="step-cadence">${cadenceText}</div>` : ''}
