@@ -128,13 +128,14 @@ body {
 /* Hero Section */
 .hero {
     position: relative;
-    height: 100vh;
-    min-height: 700px;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #0F193C 0%, #1a2a52 50%, #0F193C 100%);
-    overflow: hidden;
+    overflow: visible;
+    padding: 80px 20px 40px;
+    box-sizing: border-box;
 }
 
 .hero::before {
@@ -168,6 +169,10 @@ body {
     z-index: 1;
     text-align: center;
     color: var(--white);
+    width: 100%;
+    max-width: 900px;
+    padding: 0 20px;
+    box-sizing: border-box;
 }
 
 /* Hero Logos */
@@ -2032,8 +2037,9 @@ body {
     }
 
     .hero {
-        padding-top: 60px;
-        min-height: calc(100vh);
+        padding: 70px 15px 30px;
+        min-height: 100vh;
+        overflow: visible;
     }
 
     .nav-links {
