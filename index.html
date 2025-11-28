@@ -162,7 +162,40 @@
                         <small>游泳訓練會顯示對應的配速區間</small>
                     </div>
                 </div>
-                <button class="btn-save-settings" onclick="saveUserSettings({ftp: document.getElementById('userFTP').value, weight: document.getElementById('userWeight').value, runPace: document.getElementById('userRunPace').value, swimCSS: document.getElementById('userSwimCSS').value})">
+
+                <!-- Advanced Settings (Collapsible) -->
+                <div class="advanced-settings-toggle" onclick="toggleAdvancedSettings()">
+                    <span class="toggle-icon" id="advancedToggleIcon">▶</span>
+                    進階設定
+                </div>
+                <div class="advanced-settings-panel" id="advancedSettingsPanel">
+                    <div class="settings-grid settings-grid-2col">
+                        <div class="setting-item">
+                            <label for="userRunVO2max">
+                                <img src="images/run.png" class="setting-icon" alt="跑步">
+                                跑步 VO2max
+                            </label>
+                            <div class="input-group">
+                                <input type="number" id="userRunVO2max" min="20" max="90" step="0.1" placeholder="45">
+                                <span class="unit">ml/kg/min</span>
+                            </div>
+                            <small>最大攝氧量 (可從 Garmin 取得)</small>
+                        </div>
+                        <div class="setting-item">
+                            <label for="userBikeVO2max">
+                                <img src="images/cycling.png" class="setting-icon" alt="自行車">
+                                自行車 VO2max
+                            </label>
+                            <div class="input-group">
+                                <input type="number" id="userBikeVO2max" min="20" max="90" step="0.1" placeholder="50">
+                                <span class="unit">ml/kg/min</span>
+                            </div>
+                            <small>騎車時的最大攝氧量</small>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-save-settings" onclick="saveUserSettings({ftp: document.getElementById('userFTP').value, weight: document.getElementById('userWeight').value, runPace: document.getElementById('userRunPace').value, swimCSS: document.getElementById('userSwimCSS').value, runVO2max: document.getElementById('userRunVO2max').value, bikeVO2max: document.getElementById('userBikeVO2max').value})">
                     儲存設定
                 </button>
             </div>

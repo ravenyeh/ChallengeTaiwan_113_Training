@@ -158,6 +158,9 @@ let userFTP = localStorage.getItem('userFTP') ? parseInt(localStorage.getItem('u
 let userWeight = localStorage.getItem('userWeight') ? parseFloat(localStorage.getItem('userWeight')) : 70; // 體重 kg
 let userRunPace = localStorage.getItem('userRunPace') || '6:00'; // 馬拉松配速 min/km
 let userSwimCSS = localStorage.getItem('userSwimCSS') || '2:00'; // CSS 游泳配速 min/100m
+// Advanced settings (optional)
+let userRunVO2max = localStorage.getItem('userRunVO2max') ? parseFloat(localStorage.getItem('userRunVO2max')) : null; // 跑步 VO2max
+let userBikeVO2max = localStorage.getItem('userBikeVO2max') ? parseFloat(localStorage.getItem('userBikeVO2max')) : null; // 自行車 VO2max
 
 // Calculate power-to-weight ratio (W/kg)
 function getPowerToWeightRatio() {
@@ -165,6 +168,16 @@ function getPowerToWeightRatio() {
         return (userFTP / userWeight).toFixed(2);
     }
     return 0;
+}
+
+// Toggle advanced settings panel
+function toggleAdvancedSettings() {
+    const panel = document.getElementById('advancedSettingsPanel');
+    const icon = document.getElementById('advancedToggleIcon');
+    if (panel && icon) {
+        panel.classList.toggle('expanded');
+        icon.classList.toggle('expanded');
+    }
 }
 
 // Generate all workouts at initialization
@@ -394,10 +407,19 @@ function saveUserSettings(settings) {
         userSwimCSS = settings.swimCSS || '2:00';
         localStorage.setItem('userSwimCSS', userSwimCSS);
     }
+    // Advanced settings (VO2max)
+    if (settings.runVO2max !== undefined && settings.runVO2max !== '') {
+        userRunVO2max = parseFloat(settings.runVO2max);
+        localStorage.setItem('userRunVO2max', userRunVO2max);
+    }
+    if (settings.bikeVO2max !== undefined && settings.bikeVO2max !== '') {
+        userBikeVO2max = parseFloat(settings.bikeVO2max);
+        localStorage.setItem('userBikeVO2max', userBikeVO2max);
+    }
     generateAllWorkouts();
     updateSettingsDisplay();
     const pwr = getPowerToWeightRatio();
-    console.log(`Settings updated - FTP: ${userFTP}W, Weight: ${userWeight}kg, PWR: ${pwr}W/kg, Run: ${userRunPace}/km, Swim CSS: ${userSwimCSS}/100m`);
+    console.log(`Settings updated - FTP: ${userFTP}W, Weight: ${userWeight}kg, PWR: ${pwr}W/kg, Run: ${userRunPace}/km, Swim CSS: ${userSwimCSS}/100m, Run VO2max: ${userRunVO2max || 'N/A'}, Bike VO2max: ${userBikeVO2max || 'N/A'}`);
 }
 
 // Update settings display
@@ -407,12 +429,18 @@ function updateSettingsDisplay() {
     const runPaceInput = document.getElementById('userRunPace');
     const swimCSSInput = document.getElementById('userSwimCSS');
     const pwrDisplay = document.getElementById('pwrDisplay');
+    // Advanced settings
+    const runVO2maxInput = document.getElementById('userRunVO2max');
+    const bikeVO2maxInput = document.getElementById('userBikeVO2max');
 
     if (ftpInput) ftpInput.value = userFTP;
     if (weightInput) weightInput.value = userWeight;
     if (runPaceInput) runPaceInput.value = userRunPace;
     if (swimCSSInput) swimCSSInput.value = userSwimCSS;
     if (pwrDisplay) pwrDisplay.textContent = getPowerToWeightRatio();
+    // Advanced settings
+    if (runVO2maxInput && userRunVO2max) runVO2maxInput.value = userRunVO2max;
+    if (bikeVO2maxInput && userBikeVO2max) bikeVO2maxInput.value = userBikeVO2max;
 }
 
 // Populate schedule table
