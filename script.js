@@ -2050,7 +2050,7 @@ function renderWorkoutStepsPreview(workoutData, sportType) {
 
 // Render a single step item (handles both regular steps and repeat groups)
 function renderStepItem(step, sportType) {
-    const stepType = step.stepType?.workoutStepTypeKey || 'interval';
+    const stepType = step.stepType?.stepTypeKey || step.stepType?.workoutStepTypeKey || 'interval';
 
     // Handle repeat groups
     if (stepType === 'repeat' && step.workoutSteps) {
@@ -2075,7 +2075,7 @@ function renderStepItem(step, sportType) {
 
 // Render a single executable step
 function renderSingleStep(step, sportType) {
-    const stepType = step.stepType?.workoutStepTypeKey || 'interval';
+    const stepType = step.stepType?.stepTypeKey || step.stepType?.workoutStepTypeKey || 'interval';
     const stepColors = {
         'warmup': '#E2001A',      // Red
         'interval': '#007AFF',    // Blue
