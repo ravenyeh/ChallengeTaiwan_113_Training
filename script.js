@@ -1103,7 +1103,7 @@ function generateSwimSteps(totalDistance, content) {
                     },
                     {
                         stepOrder: 2,
-                        stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                        stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                         endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                         endConditionValue: 15,
                         targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
@@ -1148,7 +1148,7 @@ function generateSwimSteps(totalDistance, content) {
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: restTime,
                     targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
@@ -1194,7 +1194,7 @@ function generateSwimSteps(totalDistance, content) {
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: 15,
                     targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
@@ -1219,7 +1219,7 @@ function generateSwimSteps(totalDistance, content) {
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: 15,
                     targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
@@ -1245,7 +1245,7 @@ function generateSwimSteps(totalDistance, content) {
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: 20,
                     targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
@@ -1322,7 +1322,7 @@ function generateSwimSteps(totalDistance, content) {
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: 15,
                     targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
@@ -1399,17 +1399,17 @@ function generateBikeSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: 60,
-                    targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                     targetValueOne: zones.Z3.low,
                     targetValueTwo: zones.Z3.high,
-                    secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+                    secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence.zone' },
                     secondaryTargetValueOne: 100,
                     secondaryTargetValueTwo: 110,
                     description: `高迴轉激活 ${zones.Z3.low}-${zones.Z3.high}W @100-110rpm`
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: 60,
                     targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
@@ -1429,20 +1429,20 @@ function generateBikeSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: minutes * 60,
-                    targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                     targetValueOne: zones.SS.low,
                     targetValueTwo: zones.SS.high,
-                    secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+                    secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence.zone' },
                     secondaryTargetValueOne: 85,
                     secondaryTargetValueTwo: 95,
                     description: `Sweet Spot ${zones.SS.low}-${zones.SS.high}W (${Math.round(zones.SS.low/ftp*100)}-${Math.round(zones.SS.high/ftp*100)}% FTP) @85-95rpm`
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: restMinutes * 60,
-                    targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                     targetValueOne: zones.Z1.low,
                     targetValueTwo: zones.Z1.high,
                     description: `恢復 ${restMinutes}分鐘 @ ${zones.Z1.low}-${zones.Z1.high}W`
@@ -1486,14 +1486,14 @@ function generateBikeSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: 30,
-                    targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                     targetValueOne: zones.Z4.low,
                     targetValueTwo: zones.Z4.high,
                     description: `漸速 30秒 @ ${zones.Z4.low}-${zones.Z4.high}W`
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: 90,
                     targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
@@ -1513,20 +1513,20 @@ function generateBikeSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: minutes * 60,
-                    targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                     targetValueOne: zones.Z4.low,
                     targetValueTwo: ftp,
-                    secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+                    secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence.zone' },
                     secondaryTargetValueOne: 85,
                     secondaryTargetValueTwo: 95,
                     description: `FTP 間歇 ${zones.Z4.low}-${ftp}W (90-100% FTP) @85-95rpm`
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: Math.round(minutes * 60 * 0.5),
-                    targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                     targetValueOne: zones.Z1.low,
                     targetValueTwo: zones.Z2.low,
                     description: `恢復 @ ${zones.Z1.low}-${zones.Z2.low}W`
@@ -1555,7 +1555,7 @@ function generateBikeSteps(totalDistance, content) {
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: warmupDist,
-            targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+            targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
             targetValueOne: zones.Z1.low,
             targetValueTwo: zones.Z2.low,
             description: `熱身 10km @ ${zones.Z1.low}-${zones.Z2.low}W`
@@ -1571,10 +1571,10 @@ function generateBikeSteps(totalDistance, content) {
                 stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                 endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                 endConditionValue: blockDistance,
-                targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+                targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                 targetValueOne: zones.Z2.low,
                 targetValueTwo: zones.Z2.high,
-                secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+                secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence.zone' },
                 secondaryTargetValueOne: 85,
                 secondaryTargetValueTwo: 95,
                 description: `Z2 耐力區 ${zones.Z2.low}-${zones.Z2.high}W (${i+1}/${blocks})`
@@ -1589,7 +1589,7 @@ function generateBikeSteps(totalDistance, content) {
                 stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                 endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                 endConditionValue: remainingDist,
-                targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+                targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                 targetValueOne: zones.Z2.low,
                 targetValueTwo: zones.Z2.high,
                 description: `Z2 耐力區 ${zones.Z2.low}-${zones.Z2.high}W`
@@ -1620,10 +1620,10 @@ function generateBikeSteps(totalDistance, content) {
             stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: Math.round(totalDistance * 0.8),
-            targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+            targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
             targetValueOne: zones.Z1.low,
             targetValueTwo: zones.Z1.high,
-            secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+            secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence.zone' },
             secondaryTargetValueOne: 85,
             secondaryTargetValueTwo: 100,
             description: `恢復騎 ${zones.Z1.low}-${zones.Z1.high}W - 保持高迴轉`
@@ -1658,10 +1658,10 @@ function generateBikeSteps(totalDistance, content) {
             stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: Math.round(mainDist * 0.7),
-            targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+            targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
             targetValueOne: zones.Z2.low,
             targetValueTwo: zones.Z2.high,
-            secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence' },
+            secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence.zone' },
             secondaryTargetValueOne: 85,
             secondaryTargetValueTwo: 95,
             description: `Z2 有氧騎 ${zones.Z2.low}-${zones.Z2.high}W @85-95rpm`
@@ -1678,17 +1678,17 @@ function generateBikeSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: 180,
-                    targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                     targetValueOne: zones.Z3.low,
                     targetValueTwo: zones.Z3.high,
                     description: `節奏提升 ${zones.Z3.low}-${zones.Z3.high}W`
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: 120,
-                    targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'power.zone' },
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                     targetValueOne: zones.Z2.low,
                     targetValueTwo: zones.Z2.high,
                     description: `恢復 @ Z2`
@@ -1785,7 +1785,7 @@ function generateRunSteps(totalDistance, content) {
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: 100,
                     ...createPaceTarget(zones.recovery.pace - 30, zones.recovery.pace + 30),
@@ -1811,7 +1811,7 @@ function generateRunSteps(totalDistance, content) {
                 },
                 {
                     stepOrder: 2,
-                    stepType: { stepTypeId: 4, stepTypeKey: 'rest' },
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
                     endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
                     endConditionValue: restTime,
                     ...createPaceTarget(zones.recovery.pace - 30, zones.recovery.pace + 60),
