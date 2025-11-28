@@ -150,6 +150,299 @@ const trainingData = [
 // Sort by date
 trainingData.sort((a, b) => new Date(a.date) - new Date(b.date));
 
+// Pre-generated workouts cache
+let generatedWorkouts = [];
+
+// User settings (stored in localStorage)
+let userFTP = localStorage.getItem('userFTP') ? parseInt(localStorage.getItem('userFTP')) : 200;
+let userWeight = localStorage.getItem('userWeight') ? parseFloat(localStorage.getItem('userWeight')) : 70; // 體重 kg
+let userRunPace = localStorage.getItem('userRunPace') || '6:00'; // 馬拉松配速 min/km
+let userSwimCSS = localStorage.getItem('userSwimCSS') || '2:00'; // CSS 游泳配速 min/100m
+// Advanced settings (optional)
+let userRunVO2max = localStorage.getItem('userRunVO2max') ? parseFloat(localStorage.getItem('userRunVO2max')) : null; // 跑步 VO2max
+let userBikeVO2max = localStorage.getItem('userBikeVO2max') ? parseFloat(localStorage.getItem('userBikeVO2max')) : null; // 自行車 VO2max
+
+// Calculate power-to-weight ratio (W/kg)
+function getPowerToWeightRatio() {
+    if (userFTP > 0 && userWeight > 0) {
+        return (userFTP / userWeight).toFixed(2);
+    }
+    return 0;
+}
+
+// Toggle advanced settings panel
+function toggleAdvancedSettings() {
+    const panel = document.getElementById('advancedSettingsPanel');
+    const icon = document.getElementById('advancedToggleIcon');
+    if (panel && icon) {
+        panel.classList.toggle('expanded');
+        icon.classList.toggle('expanded');
+    }
+}
+
+// Generate all workouts at initialization
+function generateAllWorkouts() {
+    generatedWorkouts = trainingData.map((day, index) => {
+        // Skip rest days
+        if (day.intensity === '休息' || day.hours === 0) {
+            return null;
+        }
+
+        const dateObj = new Date(day.date);
+        const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+
+        return {
+            dayIndex: index,
+            workouts: buildWorkoutsForDay(day, index),
+            scheduledDate: dateStr
+        };
+    });
+
+    const validWorkouts = generatedWorkouts.filter(w => w !== null);
+    console.log(`Generated ${validWorkouts.length} workout days with FTP: ${userFTP}W`);
+}
+
+// Build all workouts for a training day (swim, bike, run)
+function buildWorkoutsForDay(day, dayIndex) {
+    const workouts = [];
+    const dateObj = new Date(day.date);
+    const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+
+    const sportTypes = {
+        swim: { sportTypeId: 4, sportTypeKey: 'swimming_pool' },
+        bike: { sportTypeId: 2, sportTypeKey: 'cycling' },
+        run: { sportTypeId: 1, sportTypeKey: 'running' }
+    };
+
+    // Swim workout
+    if (day.swim && parseFloat(day.swim) > 0) {
+        resetStepIdCounter();
+        const swimDistance = parseFloat(day.swim) * 1000;
+        const rawSteps = generateSwimSteps(swimDistance, day.content);
+        workouts.push({
+            type: 'swim',
+            data: {
+                workoutId: null,
+                ownerId: null,
+                workoutName: `Day ${dayIndex + 1} 游泳 - ${day.phase}`,
+                description: buildWorkoutDescription(day, 'swim'),
+                sportType: sportTypes.swim,
+                workoutSegments: [{
+                    segmentOrder: 1,
+                    sportType: sportTypes.swim,
+                    workoutSteps: rawSteps.map(step => formatStep(step))
+                }],
+                estimatedDurationInSecs: Math.round(swimDistance * 2.5 / 100 * 60),
+                estimatedDistanceInMeters: swimDistance,
+                poolLength: 25,
+                poolLengthUnit: { unitId: 1, unitKey: 'meter' },
+                scheduledDate: dateStr
+            }
+        });
+    }
+
+    // Bike workout
+    if (day.bike && parseFloat(day.bike) > 0) {
+        resetStepIdCounter();
+        const bikeDistance = parseFloat(day.bike) * 1000;
+        const rawSteps = generateBikeSteps(bikeDistance, day.content);
+        workouts.push({
+            type: 'bike',
+            data: {
+                workoutId: null,
+                ownerId: null,
+                workoutName: `Day ${dayIndex + 1} 自行車 - ${day.phase}`,
+                description: buildWorkoutDescription(day, 'bike'),
+                sportType: sportTypes.bike,
+                workoutSegments: [{
+                    segmentOrder: 1,
+                    sportType: sportTypes.bike,
+                    workoutSteps: rawSteps.map(step => formatStep(step))
+                }],
+                estimatedDurationInSecs: Math.round(bikeDistance / 1000 / 30 * 3600),
+                estimatedDistanceInMeters: bikeDistance,
+                scheduledDate: dateStr
+            }
+        });
+    }
+
+    // Run workout
+    if (day.run && parseFloat(day.run) > 0) {
+        resetStepIdCounter();
+        const runDistance = parseFloat(day.run) * 1000;
+        const rawSteps = generateRunSteps(runDistance, day.content);
+        workouts.push({
+            type: 'run',
+            data: {
+                workoutId: null,
+                ownerId: null,
+                workoutName: `Day ${dayIndex + 1} 跑步 - ${day.phase}`,
+                description: buildWorkoutDescription(day, 'run'),
+                sportType: sportTypes.run,
+                workoutSegments: [{
+                    segmentOrder: 1,
+                    sportType: sportTypes.run,
+                    workoutSteps: rawSteps.map(step => formatStep(step))
+                }],
+                estimatedDurationInSecs: Math.round(runDistance / 1000 * 6 * 60),
+                estimatedDistanceInMeters: runDistance,
+                scheduledDate: dateStr
+            }
+        });
+    }
+
+    return workouts;
+}
+
+// Parse pace string (mm:ss) to seconds
+function parsePaceToSeconds(pace) {
+    const parts = pace.split(':');
+    return parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
+}
+
+// Format seconds to pace string (mm:ss)
+function formatSecondsToPace(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    return `${mins}:${String(secs).padStart(2, '0')}`;
+}
+
+// Build workout description with user-specific paces
+function buildWorkoutDescription(day, sport) {
+    let description = extractWorkoutPart(day.content, sport === 'swim' ? '游泳' : sport === 'bike' ? '自行車' : '跑步');
+
+    // Add FTP-based power zones for bike workouts
+    if (sport === 'bike' && userFTP > 0) {
+        const zones = {
+            Z1: `< ${Math.round(userFTP * 0.55)}W`,
+            Z2: `${Math.round(userFTP * 0.55)}-${Math.round(userFTP * 0.75)}W`,
+            Z3: `${Math.round(userFTP * 0.75)}-${Math.round(userFTP * 0.90)}W`,
+            'Sweet Spot': `${Math.round(userFTP * 0.88)}-${Math.round(userFTP * 0.94)}W`,
+            Z4: `${Math.round(userFTP * 0.90)}-${Math.round(userFTP * 1.05)}W`,
+            Z5: `${Math.round(userFTP * 1.05)}-${Math.round(userFTP * 1.20)}W`
+        };
+
+        // Append power zones if content mentions them
+        if (day.content.includes('Z2')) {
+            description += `\n\n功率區間 Z2: ${zones.Z2}`;
+        }
+        if (day.content.includes('Sweet Spot')) {
+            description += `\n\nSweet Spot: ${zones['Sweet Spot']}`;
+        }
+        if (day.content.includes('FTP')) {
+            description += `\n\nFTP: ${userFTP}W`;
+        }
+    }
+
+    // Add run pace zones
+    if (sport === 'run' && userRunPace) {
+        const basePaceSeconds = parsePaceToSeconds(userRunPace);
+        const zones = {
+            '輕鬆跑': formatSecondsToPace(basePaceSeconds * 1.15),  // +15%
+            '長跑': formatSecondsToPace(basePaceSeconds * 1.10),    // +10%
+            '節奏跑': formatSecondsToPace(basePaceSeconds * 0.95),  // -5%
+            '間歇': formatSecondsToPace(basePaceSeconds * 0.85),    // -15%
+            '比賽配速': userRunPace
+        };
+
+        description += `\n\n配速參考 (基於馬拉松配速 ${userRunPace}/km):`;
+        if (day.content.includes('輕鬆跑')) {
+            description += `\n• 輕鬆跑: ${zones['輕鬆跑']}/km`;
+        }
+        if (day.content.includes('長跑')) {
+            description += `\n• 長跑: ${zones['長跑']}/km`;
+        }
+        if (day.content.includes('節奏')) {
+            description += `\n• 節奏跑: ${zones['節奏跑']}/km`;
+        }
+        if (day.content.includes('比賽配速')) {
+            description += `\n• 比賽配速: ${zones['比賽配速']}/km`;
+        }
+    }
+
+    // Add swim pace zones based on CSS
+    if (sport === 'swim' && userSwimCSS) {
+        const basePaceSeconds = parsePaceToSeconds(userSwimCSS);
+        const zones = {
+            '恢復游': formatSecondsToPace(basePaceSeconds * 1.20),   // +20%
+            '技術課': formatSecondsToPace(basePaceSeconds * 1.15),   // +15%
+            '有氧游': formatSecondsToPace(basePaceSeconds * 1.05),   // +5%
+            '配速訓練': userSwimCSS,                                  // CSS
+            '間歇': formatSecondsToPace(basePaceSeconds * 0.95)      // -5%
+        };
+
+        description += `\n\n配速參考 (基於 CSS ${userSwimCSS}/100m):`;
+        if (day.content.includes('恢復游')) {
+            description += `\n• 恢復游: ${zones['恢復游']}/100m`;
+        }
+        if (day.content.includes('技術課')) {
+            description += `\n• 技術課: ${zones['技術課']}/100m`;
+        }
+        if (day.content.includes('配速')) {
+            description += `\n• 配速訓練: ${zones['配速訓練']}/100m`;
+        }
+        if (day.content.includes('間歇')) {
+            description += `\n• 間歇: ${zones['間歇']}/100m`;
+        }
+    }
+
+    return description;
+}
+
+// Save user settings and regenerate workouts
+function saveUserSettings(settings) {
+    if (settings.ftp !== undefined) {
+        userFTP = parseInt(settings.ftp) || 200;
+        localStorage.setItem('userFTP', userFTP);
+    }
+    if (settings.weight !== undefined) {
+        userWeight = parseFloat(settings.weight) || 70;
+        localStorage.setItem('userWeight', userWeight);
+    }
+    if (settings.runPace !== undefined) {
+        userRunPace = settings.runPace || '6:00';
+        localStorage.setItem('userRunPace', userRunPace);
+    }
+    if (settings.swimCSS !== undefined) {
+        userSwimCSS = settings.swimCSS || '2:00';
+        localStorage.setItem('userSwimCSS', userSwimCSS);
+    }
+    // Advanced settings (VO2max)
+    if (settings.runVO2max !== undefined && settings.runVO2max !== '') {
+        userRunVO2max = parseFloat(settings.runVO2max);
+        localStorage.setItem('userRunVO2max', userRunVO2max);
+    }
+    if (settings.bikeVO2max !== undefined && settings.bikeVO2max !== '') {
+        userBikeVO2max = parseFloat(settings.bikeVO2max);
+        localStorage.setItem('userBikeVO2max', userBikeVO2max);
+    }
+    generateAllWorkouts();
+    updateSettingsDisplay();
+    const pwr = getPowerToWeightRatio();
+    console.log(`Settings updated - FTP: ${userFTP}W, Weight: ${userWeight}kg, PWR: ${pwr}W/kg, Run: ${userRunPace}/km, Swim CSS: ${userSwimCSS}/100m, Run VO2max: ${userRunVO2max || 'N/A'}, Bike VO2max: ${userBikeVO2max || 'N/A'}`);
+}
+
+// Update settings display
+function updateSettingsDisplay() {
+    const ftpInput = document.getElementById('userFTP');
+    const weightInput = document.getElementById('userWeight');
+    const runPaceInput = document.getElementById('userRunPace');
+    const swimCSSInput = document.getElementById('userSwimCSS');
+    const pwrDisplay = document.getElementById('pwrDisplay');
+    // Advanced settings
+    const runVO2maxInput = document.getElementById('userRunVO2max');
+    const bikeVO2maxInput = document.getElementById('userBikeVO2max');
+
+    if (ftpInput) ftpInput.value = userFTP;
+    if (weightInput) weightInput.value = userWeight;
+    if (runPaceInput) runPaceInput.value = userRunPace;
+    if (swimCSSInput) swimCSSInput.value = userSwimCSS;
+    if (pwrDisplay) pwrDisplay.textContent = getPowerToWeightRatio();
+    // Advanced settings
+    if (runVO2maxInput && userRunVO2max) runVO2maxInput.value = userRunVO2max;
+    if (bikeVO2maxInput && userBikeVO2max) bikeVO2maxInput.value = userBikeVO2max;
+}
+
 // Populate schedule table
 function populateSchedule(filter = 'all') {
     const tbody = document.getElementById('scheduleBody');
@@ -209,6 +502,10 @@ function formatDate(dateStr) {
 
 // Filter buttons
 document.addEventListener('DOMContentLoaded', () => {
+    // Generate all workouts with user settings
+    generateAllWorkouts();
+    updateSettingsDisplay();
+
     populateSchedule();
 
     const filterBtns = document.querySelectorAll('.filter-btn');
@@ -483,91 +780,106 @@ updateCountdown();
 setInterval(updateCountdown, 1000);
 
 // Convert training data to Garmin Workout JSON format
+// Uses pre-generated workouts when available for better performance
 function convertToGarminWorkout(training, index, overrideDate = null) {
-    const workouts = [];
+    // Try to use pre-generated workout
+    const preGenerated = generatedWorkouts[index];
+    if (preGenerated && preGenerated.workouts && !overrideDate) {
+        // Return deep copy of pre-generated workouts
+        return JSON.parse(JSON.stringify(preGenerated.workouts));
+    }
 
-    // Sport type mappings: 1=running, 2=cycling, 4=swimming (pool), 5=swimming (open water)
+    // Fallback: Generate on demand (for override dates or if not pre-generated)
+    return buildWorkoutsForDay(trainingData[index], index, overrideDate);
+}
+
+// Build workouts for a day with optional override date (for on-demand generation)
+function buildWorkoutsForDayWithDate(day, dayIndex, overrideDate) {
+    const workouts = [];
+    const dateObj = overrideDate ? new Date(overrideDate) : new Date(day.date);
+    const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+
     const sportTypes = {
         swim: { sportTypeId: 4, sportTypeKey: 'swimming_pool' },
         bike: { sportTypeId: 2, sportTypeKey: 'cycling' },
         run: { sportTypeId: 1, sportTypeKey: 'running' }
     };
 
-    // Parse workout content to extract details
-    const content = training.content;
-    // Use override date if provided, otherwise use training's original date
-    const dateObj = overrideDate ? new Date(overrideDate) : new Date(training.date);
-    const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
-
-    // Create swim workout if exists
-    if (training.swim && parseFloat(training.swim) > 0) {
+    // Swim workout
+    if (day.swim && parseFloat(day.swim) > 0) {
         resetStepIdCounter();
-        const swimDistance = parseFloat(training.swim) * 1000; // Convert to meters
-        const rawSteps = generateSwimSteps(swimDistance, content);
-        const swimWorkout = {
-            workoutId: null,
-            ownerId: null,
-            workoutName: `Day ${index + 1} 游泳 - ${training.phase}`,
-            description: extractWorkoutPart(content, '游泳'),
-            sportType: sportTypes.swim,
-            workoutSegments: [{
-                segmentOrder: 1,
+        const swimDistance = parseFloat(day.swim) * 1000;
+        const rawSteps = generateSwimSteps(swimDistance, day.content);
+        workouts.push({
+            type: 'swim',
+            data: {
+                workoutId: null,
+                ownerId: null,
+                workoutName: `Day ${dayIndex + 1} 游泳 - ${day.phase}`,
+                description: buildWorkoutDescription(day, 'swim'),
                 sportType: sportTypes.swim,
-                workoutSteps: rawSteps.map(step => formatStep(step))
-            }],
-            estimatedDurationInSecs: Math.round(swimDistance * 2.5 / 100 * 60), // Estimate based on 2:30/100m
-            estimatedDistanceInMeters: swimDistance,
-            poolLength: 25,
-            poolLengthUnit: { unitId: 1, unitKey: 'meter' },
-            scheduledDate: dateStr
-        };
-        workouts.push({ type: 'swim', data: swimWorkout });
+                workoutSegments: [{
+                    segmentOrder: 1,
+                    sportType: sportTypes.swim,
+                    workoutSteps: rawSteps.map(step => formatStep(step))
+                }],
+                estimatedDurationInSecs: Math.round(swimDistance * 2.5 / 100 * 60),
+                estimatedDistanceInMeters: swimDistance,
+                poolLength: 25,
+                poolLengthUnit: { unitId: 1, unitKey: 'meter' },
+                scheduledDate: dateStr
+            }
+        });
     }
 
-    // Create bike workout if exists
-    if (training.bike && parseFloat(training.bike) > 0) {
+    // Bike workout
+    if (day.bike && parseFloat(day.bike) > 0) {
         resetStepIdCounter();
-        const bikeDistance = parseFloat(training.bike) * 1000; // Convert to meters
-        const rawSteps = generateBikeSteps(bikeDistance, content);
-        const bikeWorkout = {
-            workoutId: null,
-            ownerId: null,
-            workoutName: `Day ${index + 1} 自行車 - ${training.phase}`,
-            description: extractWorkoutPart(content, '自行車'),
-            sportType: sportTypes.bike,
-            workoutSegments: [{
-                segmentOrder: 1,
+        const bikeDistance = parseFloat(day.bike) * 1000;
+        const rawSteps = generateBikeSteps(bikeDistance, day.content);
+        workouts.push({
+            type: 'bike',
+            data: {
+                workoutId: null,
+                ownerId: null,
+                workoutName: `Day ${dayIndex + 1} 自行車 - ${day.phase}`,
+                description: buildWorkoutDescription(day, 'bike'),
                 sportType: sportTypes.bike,
-                workoutSteps: rawSteps.map(step => formatStep(step))
-            }],
-            estimatedDurationInSecs: Math.round(bikeDistance / 1000 / 30 * 3600), // Estimate based on 30km/h
-            estimatedDistanceInMeters: bikeDistance,
-            scheduledDate: dateStr
-        };
-        workouts.push({ type: 'bike', data: bikeWorkout });
+                workoutSegments: [{
+                    segmentOrder: 1,
+                    sportType: sportTypes.bike,
+                    workoutSteps: rawSteps.map(step => formatStep(step))
+                }],
+                estimatedDurationInSecs: Math.round(bikeDistance / 1000 / 30 * 3600),
+                estimatedDistanceInMeters: bikeDistance,
+                scheduledDate: dateStr
+            }
+        });
     }
 
-    // Create run workout if exists
-    if (training.run && parseFloat(training.run) > 0) {
+    // Run workout
+    if (day.run && parseFloat(day.run) > 0) {
         resetStepIdCounter();
-        const runDistance = parseFloat(training.run) * 1000; // Convert to meters
-        const rawSteps = generateRunSteps(runDistance, content);
-        const runWorkout = {
-            workoutId: null,
-            ownerId: null,
-            workoutName: `Day ${index + 1} 跑步 - ${training.phase}`,
-            description: extractWorkoutPart(content, '跑步'),
-            sportType: sportTypes.run,
-            workoutSegments: [{
-                segmentOrder: 1,
+        const runDistance = parseFloat(day.run) * 1000;
+        const rawSteps = generateRunSteps(runDistance, day.content);
+        workouts.push({
+            type: 'run',
+            data: {
+                workoutId: null,
+                ownerId: null,
+                workoutName: `Day ${dayIndex + 1} 跑步 - ${day.phase}`,
+                description: buildWorkoutDescription(day, 'run'),
                 sportType: sportTypes.run,
-                workoutSteps: rawSteps.map(step => formatStep(step))
-            }],
-            estimatedDurationInSecs: Math.round(runDistance / 1000 * 6 * 60), // Estimate based on 6:00/km
-            estimatedDistanceInMeters: runDistance,
-            scheduledDate: dateStr
-        };
-        workouts.push({ type: 'run', data: runWorkout });
+                workoutSegments: [{
+                    segmentOrder: 1,
+                    sportType: sportTypes.run,
+                    workoutSteps: rawSteps.map(step => formatStep(step))
+                }],
+                estimatedDurationInSecs: Math.round(runDistance / 1000 * 6 * 60),
+                estimatedDistanceInMeters: runDistance,
+                scheduledDate: dateStr
+            }
+        });
     }
 
     return workouts;
