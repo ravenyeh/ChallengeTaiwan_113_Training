@@ -2544,8 +2544,33 @@ body {
     border-radius: 15px;
 }
 
-.workout-json-details {
+.workout-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-trainer-export {
+    padding: 6px 14px;
+    border: 1px solid var(--bike-color);
+    background: transparent;
+    color: var(--bike-color);
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-trainer-export:hover {
+    background: var(--bike-color);
+    color: white;
+}
+
+.workout-json-details {
+    flex: 0 0 auto;
 }
 
 .workout-json-details summary {

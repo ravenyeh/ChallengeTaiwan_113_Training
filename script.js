@@ -2112,14 +2112,20 @@ function showWorkoutModal(dayIndex, overrideDate = null) {
                         <span>距離: ${(workout.data.estimatedDistanceInMeters / 1000).toFixed(1)} km</span>
                         <span>預估時間: ${Math.round(workout.data.estimatedDurationInSecs / 60)} 分鐘</span>
                     </div>
-                    <details class="workout-json-details">
-                        <summary>查看 JSON</summary>
-                        <textarea class="workout-json" id="workout-json-${idx}" rows="12">${JSON.stringify(workout.data, null, 2)}</textarea>
-                        <div class="json-actions">
-                            <button class="btn-copy" onclick="copyWorkoutJson(${idx}, this)">複製 JSON</button>
-                            <button class="btn-download" onclick="downloadWorkoutJson(${idx}, '${escapedName}')">下載 .json</button>
-                        </div>
-                    </details>
+                    <div class="workout-actions-row">
+                        <details class="workout-json-details">
+                            <summary>查看 JSON</summary>
+                            <textarea class="workout-json" id="workout-json-${idx}" rows="12">${JSON.stringify(workout.data, null, 2)}</textarea>
+                            <div class="json-actions">
+                                <button class="btn-copy" onclick="copyWorkoutJson(${idx}, this)">複製 JSON</button>
+                                <button class="btn-download" onclick="downloadWorkoutJson(${idx}, '${escapedName}')">下載 .json</button>
+                            </div>
+                        </details>
+                        ${workout.type === 'bike' ? `
+                            <button class="btn-trainer-export" onclick="downloadWorkoutZwo(${idx}, '${escapedName}')">下載 ZWO</button>
+                            <button class="btn-trainer-export" onclick="downloadWorkoutErg(${idx}, '${escapedName}')">下載 ERG</button>
+                        ` : ''}
+                    </div>
                 </div>
             `;
         });
@@ -2182,6 +2188,186 @@ function downloadWorkoutJson(idx, filename) {
     const a = document.createElement('a');
     a.href = url;
     a.download = `${filename.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Download workout as ZWO file (Zwift format)
+function downloadWorkoutZwo(idx, filename) {
+    const textarea = document.getElementById(`workout-json-${idx}`);
+    const workout = JSON.parse(textarea.value);
+    const ftp = parseInt(localStorage.getItem('userFtp')) || 200;
+
+    let zwoContent = `<workout_file>
+    <author>Challenge Taiwan Training</author>
+    <name>${escapeXml(workout.workoutName)}</name>
+    <description>${escapeXml(workout.description || '')}</description>
+    <sportType>bike</sportType>
+    <workout>
+`;
+
+    // Process workout steps
+    if (workout.workoutSegments) {
+        workout.workoutSegments.forEach(segment => {
+            if (segment.workoutSteps) {
+                segment.workoutSteps.forEach(step => {
+                    zwoContent += convertStepToZwo(step, ftp);
+                });
+            }
+        });
+    }
+
+    zwoContent += `    </workout>
+</workout_file>`;
+
+    downloadFile(zwoContent, `${filename.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.zwo`, 'application/xml');
+}
+
+// Convert Garmin step to ZWO format
+function convertStepToZwo(step, ftp) {
+    // Handle repeat steps
+    if (step.repeatGroupType === 'repeat' && step.workoutSteps) {
+        let repeatContent = `        <IntervalsT Repeat="${step.numberOfIterations || 2}">\n`;
+        step.workoutSteps.forEach(subStep => {
+            repeatContent += convertStepToZwoElement(subStep, ftp, '            ');
+        });
+        repeatContent += `        </IntervalsT>\n`;
+        return repeatContent;
+    }
+
+    return convertStepToZwoElement(step, ftp, '        ');
+}
+
+// Convert single step to ZWO element
+function convertStepToZwoElement(step, ftp, indent) {
+    const duration = step.endConditionValue || 300; // seconds
+    const powerLow = step.targetValueOne ? (step.targetValueOne / ftp) : 0.5;
+    const powerHigh = step.targetValueTwo ? (step.targetValueTwo / ftp) : powerLow;
+
+    const stepType = step.stepType?.workoutStepTypeKey || 'interval';
+
+    if (stepType === 'warmup') {
+        return `${indent}<Warmup Duration="${duration}" PowerLow="${powerLow.toFixed(2)}" PowerHigh="${powerHigh.toFixed(2)}"/>\n`;
+    } else if (stepType === 'cooldown') {
+        return `${indent}<Cooldown Duration="${duration}" PowerLow="${powerHigh.toFixed(2)}" PowerHigh="${powerLow.toFixed(2)}"/>\n`;
+    } else if (stepType === 'recovery' || stepType === 'rest') {
+        return `${indent}<SteadyState Duration="${duration}" Power="${powerLow.toFixed(2)}"/>\n`;
+    } else {
+        // interval or other
+        if (Math.abs(powerLow - powerHigh) < 0.01) {
+            return `${indent}<SteadyState Duration="${duration}" Power="${powerLow.toFixed(2)}"/>\n`;
+        } else {
+            return `${indent}<SteadyState Duration="${duration}" Power="${((powerLow + powerHigh) / 2).toFixed(2)}"/>\n`;
+        }
+    }
+}
+
+// Download workout as ERG file (MRC/ERG format for trainers)
+function downloadWorkoutErg(idx, filename) {
+    const textarea = document.getElementById(`workout-json-${idx}`);
+    const workout = JSON.parse(textarea.value);
+    const ftp = parseInt(localStorage.getItem('userFtp')) || 200;
+
+    let ergContent = `[COURSE HEADER]
+VERSION = 2
+UNITS = ENGLISH
+DESCRIPTION = ${workout.description || workout.workoutName}
+FILE NAME = ${filename}
+FTP = ${ftp}
+MINUTES PERCENTAGE
+[END COURSE HEADER]
+[COURSE DATA]
+`;
+
+    let currentTime = 0; // in minutes
+
+    // Process workout steps
+    if (workout.workoutSegments) {
+        workout.workoutSegments.forEach(segment => {
+            if (segment.workoutSteps) {
+                segment.workoutSteps.forEach(step => {
+                    const result = convertStepToErg(step, ftp, currentTime);
+                    ergContent += result.content;
+                    currentTime = result.endTime;
+                });
+            }
+        });
+    }
+
+    ergContent += `[END COURSE DATA]`;
+
+    downloadFile(ergContent, `${filename.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.erg`, 'text/plain');
+}
+
+// Convert Garmin step to ERG format
+function convertStepToErg(step, ftp, startTime) {
+    let content = '';
+    let currentTime = startTime;
+
+    // Handle repeat steps
+    if (step.repeatGroupType === 'repeat' && step.workoutSteps) {
+        const iterations = step.numberOfIterations || 2;
+        for (let i = 0; i < iterations; i++) {
+            step.workoutSteps.forEach(subStep => {
+                const result = convertStepToErgElement(subStep, ftp, currentTime);
+                content += result.content;
+                currentTime = result.endTime;
+            });
+        }
+        return { content, endTime: currentTime };
+    }
+
+    return convertStepToErgElement(step, ftp, currentTime);
+}
+
+// Convert single step to ERG element
+function convertStepToErgElement(step, ftp, startTime) {
+    const durationSecs = step.endConditionValue || 300;
+    const durationMins = durationSecs / 60;
+    const endTime = startTime + durationMins;
+
+    const powerLow = step.targetValueOne || (ftp * 0.5);
+    const powerHigh = step.targetValueTwo || powerLow;
+    const percentLow = Math.round((powerLow / ftp) * 100);
+    const percentHigh = Math.round((powerHigh / ftp) * 100);
+
+    const stepType = step.stepType?.workoutStepTypeKey || 'interval';
+
+    let content = '';
+    if (stepType === 'warmup') {
+        // Ramp up
+        content = `${startTime.toFixed(2)}\t${percentLow}\n${endTime.toFixed(2)}\t${percentHigh}\n`;
+    } else if (stepType === 'cooldown') {
+        // Ramp down
+        content = `${startTime.toFixed(2)}\t${percentHigh}\n${endTime.toFixed(2)}\t${percentLow}\n`;
+    } else {
+        // Steady state (use average if range)
+        const avgPercent = Math.round((percentLow + percentHigh) / 2);
+        content = `${startTime.toFixed(2)}\t${avgPercent}\n${endTime.toFixed(2)}\t${avgPercent}\n`;
+    }
+
+    return { content, endTime };
+}
+
+// Helper: Escape XML special characters
+function escapeXml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&apos;');
+}
+
+// Helper: Download file
+function downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
