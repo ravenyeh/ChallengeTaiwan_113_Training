@@ -155,20 +155,11 @@ let generatedWorkouts = [];
 
 // User settings (stored in localStorage)
 let userFTP = localStorage.getItem('userFTP') ? parseInt(localStorage.getItem('userFTP')) : 190;
-let userWeight = localStorage.getItem('userWeight') ? parseFloat(localStorage.getItem('userWeight')) : 70; // 體重 kg
 let userRunPace = localStorage.getItem('userRunPace') || '6:00'; // 馬拉松配速 min/km
 let userSwimCSS = localStorage.getItem('userSwimCSS') || '2:30'; // CSS 游泳配速 min/100m
 // Advanced settings (optional)
 let userRunVO2max = localStorage.getItem('userRunVO2max') ? parseFloat(localStorage.getItem('userRunVO2max')) : null; // 跑步 VO2max
 let userBikeVO2max = localStorage.getItem('userBikeVO2max') ? parseFloat(localStorage.getItem('userBikeVO2max')) : null; // 自行車 VO2max
-
-// Calculate power-to-weight ratio (W/kg)
-function getPowerToWeightRatio() {
-    if (userFTP > 0 && userWeight > 0) {
-        return (userFTP / userWeight).toFixed(2);
-    }
-    return 0;
-}
 
 // Toggle advanced settings panel
 function toggleAdvancedSettings() {
@@ -392,19 +383,15 @@ function buildWorkoutDescription(day, sport) {
 // Save user settings and regenerate workouts
 function saveUserSettings(settings) {
     if (settings.ftp !== undefined) {
-        userFTP = parseInt(settings.ftp) || 200;
+        userFTP = parseInt(settings.ftp) || 190;
         localStorage.setItem('userFTP', userFTP);
-    }
-    if (settings.weight !== undefined) {
-        userWeight = parseFloat(settings.weight) || 70;
-        localStorage.setItem('userWeight', userWeight);
     }
     if (settings.runPace !== undefined) {
         userRunPace = settings.runPace || '6:00';
         localStorage.setItem('userRunPace', userRunPace);
     }
     if (settings.swimCSS !== undefined) {
-        userSwimCSS = settings.swimCSS || '2:00';
+        userSwimCSS = settings.swimCSS || '2:30';
         localStorage.setItem('userSwimCSS', userSwimCSS);
     }
     // Advanced settings (VO2max)
@@ -426,8 +413,7 @@ function saveUserSettings(settings) {
     // Update today's training display
     displayTodayTraining();
 
-    const pwr = getPowerToWeightRatio();
-    console.log(`Settings updated - FTP: ${userFTP}W, Weight: ${userWeight}kg, PWR: ${pwr}W/kg, Run: ${userRunPace}/km, Swim CSS: ${userSwimCSS}/100m, Run VO2max: ${userRunVO2max || 'N/A'}, Bike VO2max: ${userBikeVO2max || 'N/A'}`);
+    console.log(`Settings updated - FTP: ${userFTP}W, Run: ${userRunPace}/km, Swim CSS: ${userSwimCSS}/100m, Run VO2max: ${userRunVO2max || 'N/A'}, Bike VO2max: ${userBikeVO2max || 'N/A'}`);
 
     // Show confirmation to user
     showSettingsSavedMessage();
@@ -452,15 +438,10 @@ function showSettingsSavedMessage() {
     const summaryValues = document.getElementById('summaryValues');
 
     if (banner && summaryValues) {
-        const pwr = getPowerToWeightRatio();
         summaryValues.innerHTML = `
             <span class="value-item">
                 <img src="images/cycling.png" alt="FTP">
                 FTP: ${userFTP}W
-            </span>
-            <span class="value-item">
-                <img src="images/cycling.png" alt="體重">
-                體重: ${userWeight}kg (${pwr}W/kg)
             </span>
             <span class="value-item">
                 <img src="images/run.png" alt="跑步">
@@ -477,26 +458,22 @@ function showSettingsSavedMessage() {
         banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // Show brief alert confirmation
+    // Show confirmation to user
     alert('課表更新完成！');
 }
 
 // Update settings display
 function updateSettingsDisplay() {
     const ftpInput = document.getElementById('userFTP');
-    const weightInput = document.getElementById('userWeight');
     const runPaceInput = document.getElementById('userRunPace');
     const swimCSSInput = document.getElementById('userSwimCSS');
-    const pwrDisplay = document.getElementById('pwrDisplay');
     // Advanced settings
     const runVO2maxInput = document.getElementById('userRunVO2max');
     const bikeVO2maxInput = document.getElementById('userBikeVO2max');
 
     if (ftpInput) ftpInput.value = userFTP;
-    if (weightInput) weightInput.value = userWeight;
     if (runPaceInput) runPaceInput.value = userRunPace;
     if (swimCSSInput) swimCSSInput.value = userSwimCSS;
-    if (pwrDisplay) pwrDisplay.textContent = getPowerToWeightRatio();
     // Advanced settings
     if (runVO2maxInput && userRunVO2max) runVO2maxInput.value = userRunVO2max;
     if (bikeVO2maxInput && userBikeVO2max) bikeVO2maxInput.value = userBikeVO2max;
@@ -2743,15 +2720,10 @@ function initSettingsSummaryBanner() {
     const summaryValues = document.getElementById('summaryValues');
 
     if (banner && summaryValues) {
-        const pwr = getPowerToWeightRatio();
         summaryValues.innerHTML = `
             <span class="value-item">
                 <img src="images/cycling.png" alt="FTP">
                 FTP: ${userFTP}W
-            </span>
-            <span class="value-item">
-                <img src="images/cycling.png" alt="體重">
-                體重: ${userWeight}kg (${pwr}W/kg)
             </span>
             <span class="value-item">
                 <img src="images/run.png" alt="跑步">

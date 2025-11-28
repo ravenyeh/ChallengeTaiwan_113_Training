@@ -381,17 +381,6 @@
                         <small>自行車訓練會顯示對應的功率區間</small>
                     </div>
                     <div class="setting-item">
-                        <label for="userWeight">
-                            <img src="images/cycling.png" class="setting-icon" alt="體重">
-                            體重
-                        </label>
-                        <div class="input-group">
-                            <input type="number" id="userWeight" min="30" max="200" step="0.1" placeholder="70">
-                            <span class="unit">kg</span>
-                        </div>
-                        <small>推力比: <span id="pwrDisplay">--</span> W/kg</small>
-                    </div>
-                    <div class="setting-item">
                         <label for="userRunPace">
                             <img src="images/run.png" class="setting-icon" alt="跑步">
                             馬拉松配速
@@ -448,7 +437,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-save-settings" onclick="saveUserSettings({ftp: document.getElementById('userFTP').value, weight: document.getElementById('userWeight').value, runPace: document.getElementById('userRunPace').value, swimCSS: document.getElementById('userSwimCSS').value, runVO2max: document.getElementById('userRunVO2max').value, bikeVO2max: document.getElementById('userBikeVO2max').value})">
+                <button class="btn-save-settings" onclick="saveUserSettings({ftp: document.getElementById('userFTP').value, runPace: document.getElementById('userRunPace').value, swimCSS: document.getElementById('userSwimCSS').value, runVO2max: document.getElementById('userRunVO2max').value, bikeVO2max: document.getElementById('userBikeVO2max').value})">
                     更新課表內容
                 </button>
             </div>
