@@ -2274,7 +2274,7 @@ function closeWorkoutModal() {
 function downloadWorkoutJson(idx, filename) {
     const input = document.getElementById(`workout-json-${idx}`);
     const json = JSON.stringify(JSON.parse(input.value), null, 2);
-    downloadFile(json, `${filename.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.json`, 'application/json');
+    downloadFile(json, `${getEnglishFilename(filename)}.json`, 'application/json');
 }
 
 // Download workout as ZWO file (Zwift format)
@@ -2305,7 +2305,7 @@ function downloadWorkoutZwo(idx, filename) {
     zwoContent += `    </workout>
 </workout_file>`;
 
-    downloadFile(zwoContent, `${filename.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.zwo`, 'application/xml');
+    downloadFile(zwoContent, `${getEnglishFilename(filename)}.zwo`, 'application/xml');
 }
 
 // Convert Garmin step to ZWO format
@@ -2381,7 +2381,7 @@ MINUTES PERCENTAGE
 
     ergContent += `[END COURSE DATA]`;
 
-    downloadFile(ergContent, `${filename.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.erg`, 'text/plain');
+    downloadFile(ergContent, `${getEnglishFilename(filename)}.erg`, 'text/plain');
 }
 
 // Convert Garmin step to ERG format
@@ -2442,6 +2442,40 @@ function escapeXml(str) {
               .replace(/>/g, '&gt;')
               .replace(/"/g, '&quot;')
               .replace(/'/g, '&apos;');
+}
+
+// Helper: Convert workout name to English for export filename
+function getEnglishFilename(workoutName) {
+    // Sport name translations
+    const sportTranslations = {
+        '游泳': 'Swim',
+        '自行車': 'Bike',
+        '跑步': 'Run'
+    };
+
+    // Phase translations
+    const phaseTranslations = {
+        '基礎期': 'Base',
+        '建構期': 'Build',
+        '巔峰期': 'Peak',
+        '減量期': 'Taper',
+        '賽前週': 'Race_Week'
+    };
+
+    let englishName = workoutName;
+
+    // Replace sport names
+    for (const [chinese, english] of Object.entries(sportTranslations)) {
+        englishName = englishName.replace(chinese, english);
+    }
+
+    // Replace phase names
+    for (const [chinese, english] of Object.entries(phaseTranslations)) {
+        englishName = englishName.replace(chinese, english);
+    }
+
+    // Clean up: keep only alphanumeric and common characters, replace others with underscore
+    return englishName.replace(/[^a-zA-Z0-9_\-]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 }
 
 // Helper: Download file
