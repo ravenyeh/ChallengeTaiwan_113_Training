@@ -2157,8 +2157,9 @@ function renderSingleStep(step, sportType) {
 
 // Helper: Format seconds to MM:SS pace
 function formatPace(totalSeconds) {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = Math.round(totalSeconds % 60);
+    const roundedTotal = Math.round(totalSeconds);
+    const mins = Math.floor(roundedTotal / 60);
+    const secs = roundedTotal % 60;
     return `${mins}:${String(secs).padStart(2, '0')}`;
 }
 
