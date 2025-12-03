@@ -14,7 +14,7 @@
       "use": "@vercel/static"
     },
     {
-      "src": "*.js",
+      "src": "script.js",
       "use": "@vercel/static"
     },
     {
@@ -28,20 +28,8 @@
   ],
   "routes": [
     {
-      "src": "/api/garmin/login",
-      "dest": "/api/garmin/login.js"
-    },
-    {
-      "src": "/api/garmin/logout",
-      "dest": "/api/garmin/logout.js"
-    },
-    {
-      "src": "/api/garmin/workout",
-      "dest": "/api/garmin/workout.js"
-    },
-    {
-      "src": "/api/garmin/import",
-      "dest": "/api/garmin/import.js"
+      "src": "/api/garmin/(.*)",
+      "dest": "/api/garmin/$1.js"
     },
     {
       "src": "/(.*)",
