@@ -417,10 +417,14 @@ function displayTodayTraining() {
                 if (todaySwim) todaySwim.innerHTML = previewTraining.swim ? `<img src="images/swim.png" class="stat-icon-small" alt="游泳"> ${previewTraining.swim}km` : '';
                 if (todayBike) todayBike.innerHTML = previewTraining.bike ? `<img src="images/cycling.png" class="stat-icon-small" alt="自行車"> ${previewTraining.bike}km` : '';
                 if (todayRun) todayRun.innerHTML = previewTraining.run ? `<img src="images/run.png" class="stat-icon-small" alt="跑步"> ${previewTraining.run}km` : '';
-                if (todayHours) todayHours.textContent = previewTraining.hours > 0 ? `${previewTraining.hours}h` : '';
+                // 只有當有自行車或跑步時才顯示時數（游泳沒有預估時數）
+                if (todayHours) {
+                    const hasNonSwimWorkout = previewTraining.bike || previewTraining.run;
+                    todayHours.textContent = (hasNonSwimWorkout && previewTraining.hours > 0) ? `${previewTraining.hours}h` : '';
+                }
 
                 if (todayNote) {
-                    todayNote.textContent = `訓練計劃將於 ${formatDate(trainingData[0].date)} 開始`;
+                    todayNote.textContent = `🎲 隨機預覽 · 訓練計劃將於 ${formatDate(trainingData[0].date)} 正式開始`;
                     todayNote.style.display = 'block';
                 }
 
