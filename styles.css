@@ -424,6 +424,10 @@ body {
     font-size: 0.85rem;
 }
 
+.today-stat:empty {
+    display: none;
+}
+
 .today-stat .stat-icon {
     font-size: 1rem;
 }
