@@ -357,11 +357,36 @@ function displayTodayTraining() {
         }
         if (todayDescription) todayDescription.textContent = todayTraining.content;
 
-        // Stats
-        if (todaySwim) todaySwim.innerHTML = todayTraining.swim ? `<img src="images/swim.png" class="stat-icon-small" alt="游泳"> ${todayTraining.swim}km` : '';
-        if (todayBike) todayBike.innerHTML = todayTraining.bike ? `<img src="images/cycling.png" class="stat-icon-small" alt="自行車"> ${todayTraining.bike}km` : '';
-        if (todayRun) todayRun.innerHTML = todayTraining.run ? `<img src="images/run.png" class="stat-icon-small" alt="跑步"> ${todayTraining.run}km` : '';
-        if (todayHours) todayHours.innerHTML = todayTraining.hours > 0 ? `<span class="stat-emoji">⏱️</span> ${todayTraining.hours}h` : '';
+        // Stats - 計算各運動預估時間
+        if (todaySwim) {
+            if (todayTraining.swim) {
+                const swimKm = parseFloat(todayTraining.swim);
+                const swimMinutes = Math.round(swimKm * 25); // 約每公里25分鐘
+                todaySwim.innerHTML = `<img src="images/swim.png" class="stat-icon-small" alt="游泳"> ${todayTraining.swim}km <span class="stat-time">~${swimMinutes}min</span>`;
+            } else {
+                todaySwim.innerHTML = '';
+            }
+        }
+        if (todayBike) {
+            if (todayTraining.bike) {
+                const bikeKm = parseFloat(todayTraining.bike);
+                const bikeMinutes = Math.round(bikeKm * 2); // 約每公里2分鐘 (30km/h)
+                todayBike.innerHTML = `<img src="images/cycling.png" class="stat-icon-small" alt="自行車"> ${todayTraining.bike}km <span class="stat-time">~${bikeMinutes}min</span>`;
+            } else {
+                todayBike.innerHTML = '';
+            }
+        }
+        if (todayRun) {
+            if (todayTraining.run) {
+                const runKm = parseFloat(todayTraining.run);
+                const runMinutes = Math.round(runKm * 6); // 約每公里6分鐘
+                todayRun.innerHTML = `<img src="images/run.png" class="stat-icon-small" alt="跑步"> ${todayTraining.run}km <span class="stat-time">~${runMinutes}min</span>`;
+            } else {
+                todayRun.innerHTML = '';
+            }
+        }
+        // 總訓練時數
+        if (todayHours) todayHours.innerHTML = todayTraining.hours > 0 ? `⏱️ 共${todayTraining.hours}h` : '';
 
         // Note for holidays
         if (todayNote && todayTraining.holiday) {
@@ -413,13 +438,37 @@ function displayTodayTraining() {
                 }
                 if (todayDescription) todayDescription.textContent = previewTraining.content;
 
-                // Stats
-                if (todaySwim) todaySwim.innerHTML = previewTraining.swim ? `<img src="images/swim.png" class="stat-icon-small" alt="游泳"> ${previewTraining.swim}km` : '';
-                if (todayBike) todayBike.innerHTML = previewTraining.bike ? `<img src="images/cycling.png" class="stat-icon-small" alt="自行車"> ${previewTraining.bike}km` : '';
-                if (todayRun) todayRun.innerHTML = previewTraining.run ? `<img src="images/run.png" class="stat-icon-small" alt="跑步"> ${previewTraining.run}km` : '';
-                // 顯示訓練時數（有時數且大於0時顯示）
+                // Stats - 計算各運動預估時間
+                if (todaySwim) {
+                    if (previewTraining.swim) {
+                        const swimKm = parseFloat(previewTraining.swim);
+                        const swimMinutes = Math.round(swimKm * 25); // 約每公里25分鐘
+                        todaySwim.innerHTML = `<img src="images/swim.png" class="stat-icon-small" alt="游泳"> ${previewTraining.swim}km <span class="stat-time">~${swimMinutes}min</span>`;
+                    } else {
+                        todaySwim.innerHTML = '';
+                    }
+                }
+                if (todayBike) {
+                    if (previewTraining.bike) {
+                        const bikeKm = parseFloat(previewTraining.bike);
+                        const bikeMinutes = Math.round(bikeKm * 2); // 約每公里2分鐘 (30km/h)
+                        todayBike.innerHTML = `<img src="images/cycling.png" class="stat-icon-small" alt="自行車"> ${previewTraining.bike}km <span class="stat-time">~${bikeMinutes}min</span>`;
+                    } else {
+                        todayBike.innerHTML = '';
+                    }
+                }
+                if (todayRun) {
+                    if (previewTraining.run) {
+                        const runKm = parseFloat(previewTraining.run);
+                        const runMinutes = Math.round(runKm * 6); // 約每公里6分鐘
+                        todayRun.innerHTML = `<img src="images/run.png" class="stat-icon-small" alt="跑步"> ${previewTraining.run}km <span class="stat-time">~${runMinutes}min</span>`;
+                    } else {
+                        todayRun.innerHTML = '';
+                    }
+                }
+                // 總訓練時數
                 if (todayHours) {
-                    todayHours.innerHTML = previewTraining.hours > 0 ? `<span class="stat-emoji">⏱️</span> ${previewTraining.hours}h` : '';
+                    todayHours.innerHTML = previewTraining.hours > 0 ? `⏱️ 共${previewTraining.hours}h` : '';
                 }
 
                 if (todayNote) {
