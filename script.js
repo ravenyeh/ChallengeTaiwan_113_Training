@@ -391,17 +391,49 @@ function displayTodayTraining() {
         const lastTrainingDate = new Date(trainingData[trainingData.length - 1].date);
 
         if (now < firstTrainingDate) {
-            todayContainer.style.display = 'block';
-            if (todayLabel) todayLabel.textContent = '訓練尚未開始';
-            if (todayPhase) todayPhase.textContent = '';
-            if (todayIntensity) todayIntensity.textContent = '';
-            if (todayDescription) todayDescription.textContent = `訓練計劃將於 ${formatDate(trainingData[0].date)} 開始`;
-            if (todaySwim) todaySwim.textContent = '';
-            if (todayBike) todayBike.textContent = '';
-            if (todayRun) todayRun.textContent = '';
-            if (todayHours) todayHours.textContent = '';
-            if (todayNote) todayNote.style.display = 'none';
-            if (todayActions) todayActions.innerHTML = '';
+            // 隨機從建構期挑選一天有訓練的課表來預覽
+            const buildPhaseWorkouts = trainingData.filter(day =>
+                day.phase === '建構期' && (day.swim || day.bike || day.run)
+            );
+
+            if (buildPhaseWorkouts.length > 0) {
+                const randomIndex = Math.floor(Math.random() * buildPhaseWorkouts.length);
+                const previewTraining = buildPhaseWorkouts[randomIndex];
+                const previewDayIndex = trainingData.findIndex(d => d.date === previewTraining.date);
+
+                todayContainer.style.display = 'block';
+                if (todayLabel) todayLabel.textContent = '訓練預覽';
+                if (todayPhase) {
+                    todayPhase.textContent = previewTraining.phase;
+                    todayPhase.className = `today-phase phase-${previewTraining.phase}`;
+                }
+                if (todayIntensity) {
+                    todayIntensity.textContent = previewTraining.intensity;
+                    todayIntensity.className = `today-intensity intensity-${previewTraining.intensity}`;
+                }
+                if (todayDescription) todayDescription.textContent = previewTraining.content;
+
+                // Stats
+                if (todaySwim) todaySwim.innerHTML = previewTraining.swim ? `<img src="images/swim.png" class="stat-icon-small" alt="游泳"> ${previewTraining.swim}km` : '';
+                if (todayBike) todayBike.innerHTML = previewTraining.bike ? `<img src="images/cycling.png" class="stat-icon-small" alt="自行車"> ${previewTraining.bike}km` : '';
+                if (todayRun) todayRun.innerHTML = previewTraining.run ? `<img src="images/run.png" class="stat-icon-small" alt="跑步"> ${previewTraining.run}km` : '';
+                if (todayHours) todayHours.textContent = previewTraining.hours > 0 ? `${previewTraining.hours}h` : '';
+
+                if (todayNote) {
+                    todayNote.textContent = `訓練計劃將於 ${formatDate(trainingData[0].date)} 開始`;
+                    todayNote.style.display = 'block';
+                }
+
+                if (todayActions) {
+                    todayActions.innerHTML = `
+                        <button class="btn-today-workout" onclick="showWorkoutModal(${previewDayIndex}, null)">
+                            查看訓練內容
+                        </button>
+                    `;
+                }
+            } else {
+                todayContainer.style.display = 'none';
+            }
         } else if (now > lastTrainingDate) {
             todayContainer.style.display = 'block';
             if (todayLabel) todayLabel.textContent = '訓練計劃已完成';
