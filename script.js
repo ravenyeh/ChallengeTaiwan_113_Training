@@ -490,6 +490,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Scroll indicator click handler
+    const scrollIndicator = document.querySelector('.scroll-indicator');
+    if (scrollIndicator) {
+        scrollIndicator.addEventListener('click', () => {
+            const scheduleSection = document.getElementById('schedule');
+            if (scheduleSection) {
+                scheduleSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+        scrollIndicator.style.cursor = 'pointer';
+    }
+
     // Header scroll effect
     const header = document.querySelector('.header');
     if (header) {
