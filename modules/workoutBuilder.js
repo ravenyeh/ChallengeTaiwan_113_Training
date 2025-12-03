@@ -16,9 +16,14 @@ export function getNextStepId() {
 
 // Format step for Garmin API
 export function formatStep(step) {
+    // Determine if this is a repeat group or an executable step
+    const isRepeatGroup = step.stepType?.stepTypeKey === 'repeat' && step.workoutSteps;
+
     const formatted = {
+        type: isRepeatGroup ? 'RepeatGroupDTO' : 'ExecutableStepDTO',
         stepId: getNextStepId(),
         stepOrder: step.stepOrder,
+        childStepId: null,
         stepType: step.stepType,
         endCondition: step.endCondition,
         targetType: step.targetType || { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
@@ -43,10 +48,12 @@ export function formatStep(step) {
     }
 
     // Handle repeat groups
-    if (step.stepType?.stepTypeKey === 'repeat' && step.workoutSteps) {
-        formatted.repeatGroupType = 'repeat';
+    if (isRepeatGroup) {
         formatted.numberOfIterations = step.numberOfIterations || 2;
         formatted.workoutSteps = step.workoutSteps.map(s => formatStep(s));
+        // Remove fields not needed for repeat groups
+        delete formatted.endCondition;
+        delete formatted.targetType;
     }
 
     return formatted;
@@ -1023,7 +1030,7 @@ export function buildWorkoutsForDay(day, dayIndex, trainingData) {
     const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
 
     const sportTypes = {
-        swim: { sportTypeId: 4, sportTypeKey: 'swimming_pool' },
+        swim: { sportTypeId: 5, sportTypeKey: 'pool_swimming' },
         bike: { sportTypeId: 2, sportTypeKey: 'cycling' },
         run: { sportTypeId: 1, sportTypeKey: 'running' }
     };
