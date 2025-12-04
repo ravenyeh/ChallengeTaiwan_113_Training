@@ -430,8 +430,12 @@ function displayTodayTraining() {
                 const previewTraining = buildPhaseWorkouts[randomIndex];
                 const previewDayIndex = trainingData.findIndex(d => d.date === previewTraining.date);
 
+                // Get today's date in local timezone for import scheduling
+                const today = new Date();
+                const todayLocalDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
                 todayContainer.style.display = 'block';
-                if (todayLabel) todayLabel.textContent = '訓練預覽';
+                if (todayLabel) todayLabel.textContent = '今日訓練預覽';
                 if (todayPhase) {
                     todayPhase.textContent = previewTraining.phase;
                     todayPhase.className = `today-phase phase-${previewTraining.phase}`;
@@ -482,7 +486,7 @@ function displayTodayTraining() {
 
                 if (todayActions) {
                     todayActions.innerHTML = `
-                        <button class="btn-today-workout" onclick="showWorkoutModal(${previewDayIndex}, null)">
+                        <button class="btn-today-workout" onclick="showWorkoutModal(${previewDayIndex}, '${todayLocalDate}')">
                             查看訓練內容
                         </button>
                     `;
