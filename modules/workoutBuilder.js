@@ -901,16 +901,36 @@ export function generateRunSteps(totalDistance, content) {
             description: '3x100m 漸速跑'
         });
 
-        // Main ladder intervals
+        // Main ladder intervals - shorter distance = faster pace
         distances.forEach((dist, idx) => {
             if (dist > 0) {
+                // Determine pace based on distance: shorter = faster
+                let targetPace, paceDesc;
+                if (dist >= 3000) {
+                    // 3km+ → Threshold pace (T配速)
+                    targetPace = createPaceTarget(zones.tempo.pace - 5, zones.tempo.pace + 10);
+                    paceDesc = zones.tempo.name;
+                } else if (dist >= 2000) {
+                    // 2km → Interval pace (I配速)
+                    targetPace = createPaceTarget(zones.interval.pace - 5, zones.interval.pace + 10);
+                    paceDesc = zones.interval.name;
+                } else if (dist >= 1000) {
+                    // 1km → Fast interval pace
+                    targetPace = createPaceTarget(zones.interval.pace - 15, zones.interval.pace);
+                    paceDesc = `快速 ${zones.interval.name}`;
+                } else {
+                    // <1km → Rep pace (R配速)
+                    targetPace = createPaceTarget(zones.rep.pace - 5, zones.rep.pace + 10);
+                    paceDesc = zones.rep.name;
+                }
+
                 steps.push({
                     stepOrder: stepOrder++,
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: dist,
-                    ...createPaceTarget(zones.interval.pace - 10, zones.interval.pace + 10),
-                    description: `間歇 ${dist/1000}km @ ${zones.interval.name}`
+                    ...targetPace,
+                    description: `間歇 ${dist/1000}km @ ${paceDesc}`
                 });
                 // Recovery jog between intervals (except after last)
                 if (idx < distances.length - 1) {
