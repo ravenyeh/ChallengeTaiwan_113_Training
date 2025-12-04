@@ -34,6 +34,7 @@ import {
 // Import Garmin Connect integration
 import {
     directImportToGarmin as garminDirectImport,
+    oneClickImportToGarmin as garminOneClickImport,
     getGarminSession,
     updateGarminStatus
 } from './modules/garminConnect.js';
@@ -43,7 +44,10 @@ import {
     showWorkoutModal as displayWorkoutModal,
     closeWorkoutModal,
     initModalEventListeners,
-    initWeeklyMileageChart
+    initWeeklyMileageChart,
+    handleGarminLogout,
+    refreshGarminUI,
+    setTrainingDataReference
 } from './modules/ui.js';
 
 // ============================================
@@ -534,12 +538,20 @@ function directImportToGarmin(dayIndex) {
     garminDirectImport(dayIndex, trainingData, currentWorkoutOverrideDate);
 }
 
+// One-click import to Garmin wrapper (uses saved credentials)
+function oneClickImportToGarmin(dayIndex) {
+    garminOneClickImport(dayIndex, trainingData, currentWorkoutOverrideDate);
+}
+
 // ============================================
 // Initialize Application
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initializing Challenge Taiwan 113 Training Plan...');
+
+    // Set training data reference for UI module (used for Garmin refresh)
+    setTrainingDataReference(trainingData);
 
     // Update settings display
     updateSettingsDisplay();
@@ -651,6 +663,9 @@ window.closeSettingsModal = closeSettingsModal;
 window.saveUserSettings = saveUserSettings;
 window.toggleAdvancedSettings = toggleAdvancedSettings;
 window.directImportToGarmin = directImportToGarmin;
+window.oneClickImportToGarmin = oneClickImportToGarmin;
+window.handleGarminLogout = handleGarminLogout;
+window.refreshGarminUI = refreshGarminUI;
 window.downloadWorkoutJson = downloadWorkoutJson;
 window.downloadWorkoutZwo = downloadWorkoutZwo;
 window.downloadWorkoutErg = downloadWorkoutErg;
