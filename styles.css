@@ -3261,3 +3261,133 @@ body {
         justify-content: center;
     }
 }
+
+/* Training Plan Selector */
+.training-plan-selector-wrapper {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    border: 1px solid #ffcc80;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.selector-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.selector-label {
+    font-weight: 700;
+    color: #e65100;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selector-label::before {
+    content: '📋';
+    font-size: 1.1rem;
+}
+
+.training-plan-selector {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.plan-option {
+    flex: 1;
+    min-width: 200px;
+    background: var(--white);
+    border: 2px solid #ffcc80;
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.plan-option:hover {
+    border-color: #ff9800;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
+}
+
+.plan-option.active {
+    border-color: #e65100;
+    background: linear-gradient(135deg, #fff8e1 0%, #fff3e0 100%);
+    box-shadow: 0 4px 15px rgba(230, 81, 0, 0.25);
+}
+
+.plan-radio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ffcc80;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    transition: var(--transition);
+}
+
+.plan-option.active .plan-radio {
+    border-color: #e65100;
+    background: #e65100;
+}
+
+.plan-option.active .plan-radio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--white);
+    border-radius: 50%;
+}
+
+.plan-info {
+    flex: 1;
+}
+
+.plan-name {
+    font-weight: 700;
+    color: var(--text-color);
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.plan-desc {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    line-height: 1.4;
+}
+
+/* Mobile Training Plan Selector */
+@media (max-width: 768px) {
+    .training-plan-selector-wrapper {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .training-plan-selector {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .plan-option {
+        min-width: auto;
+        padding: 12px;
+    }
+
+    .plan-name {
+        font-size: 0.95rem;
+    }
+
+    .plan-desc {
+        font-size: 0.8rem;
+    }
+}

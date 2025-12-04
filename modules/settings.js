@@ -4,6 +4,25 @@
 const DEFAULT_FTP = 190;
 const DEFAULT_RUN_PACE = '6:00';
 const DEFAULT_SWIM_CSS = '2:30';
+const DEFAULT_TRAINING_PLAN = 'ai'; // 'ai' or 'garmin-tri'
+
+// Training plan options
+export const TRAINING_PLANS = {
+    'ai': {
+        id: 'ai',
+        name: 'AI 生成課表',
+        description: '16 週訓練計劃 (1/5 - 4/25)',
+        startDate: 'January 5, 2026',
+        raceDate: 'April 25, 2026'
+    },
+    'garmin-tri': {
+        id: 'garmin-tri',
+        name: 'Garmin TRI 課表',
+        description: '15 週訓練營課表 (1/15 - 4/28)',
+        startDate: 'January 15, 2026',
+        raceDate: 'April 28, 2026'
+    }
+};
 
 // User settings state
 let userFTP = localStorage.getItem('userFTP') ? parseInt(localStorage.getItem('userFTP')) : DEFAULT_FTP;
@@ -11,6 +30,7 @@ let userRunPace = localStorage.getItem('userRunPace') || DEFAULT_RUN_PACE;
 let userSwimCSS = localStorage.getItem('userSwimCSS') || DEFAULT_SWIM_CSS;
 let userRunVO2max = localStorage.getItem('userRunVO2max') ? parseFloat(localStorage.getItem('userRunVO2max')) : null;
 let userBikeVO2max = localStorage.getItem('userBikeVO2max') ? parseFloat(localStorage.getItem('userBikeVO2max')) : null;
+let userTrainingPlan = localStorage.getItem('userTrainingPlan') || DEFAULT_TRAINING_PLAN;
 
 // Getters
 export function getUserFTP() { return userFTP; }
@@ -18,6 +38,17 @@ export function getUserRunPace() { return userRunPace; }
 export function getUserSwimCSS() { return userSwimCSS; }
 export function getUserRunVO2max() { return userRunVO2max; }
 export function getUserBikeVO2max() { return userBikeVO2max; }
+export function getUserTrainingPlan() { return userTrainingPlan; }
+
+// Set training plan
+export function setUserTrainingPlan(planId) {
+    if (TRAINING_PLANS[planId]) {
+        userTrainingPlan = planId;
+        localStorage.setItem('userTrainingPlan', planId);
+        return true;
+    }
+    return false;
+}
 
 // Save user settings
 export function saveUserSettings(settings, callbacks = {}) {
