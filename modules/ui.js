@@ -3,7 +3,13 @@
 import { formatDate, formatPace } from './utils.js';
 import { convertToGarminWorkout } from './workoutBuilder.js';
 import { downloadWorkoutJson, downloadWorkoutZwo, downloadWorkoutErg } from './workoutExport.js';
-import { directImportToGarmin } from './garminConnect.js';
+import {
+    directImportToGarmin,
+    oneClickImportToGarmin,
+    hasGarminCredentials,
+    getGarminCredentials,
+    clearGarminCredentials
+} from './garminConnect.js';
 
 // ============================================
 // Global State
@@ -265,17 +271,40 @@ export function showWorkoutModal(dayIndex, trainingData, overrideDate = null) {
     }
 
     // Garmin Connect section
+    const hasCreds = hasGarminCredentials();
+    const savedCreds = getGarminCredentials();
+
     html += `
             <div class="garmin-section">
                 <h4>匯入 Garmin Connect</h4>
                 ${workouts.length > 0 ? `
-                    <div class="garmin-login-form" id="garminLoginForm">
-                        <input type="email" id="garminEmail" placeholder="Garmin Email" class="garmin-input">
-                        <input type="password" id="garminPassword" placeholder="密碼" class="garmin-input">
-                        <button class="btn-garmin-import" onclick="directImportToGarmin(${dayIndex})">
-                            登入並匯入訓練
-                        </button>
-                    </div>
+                    ${hasCreds ? `
+                        <!-- One-click import UI when credentials are saved -->
+                        <div class="garmin-saved-account" id="garminSavedAccount">
+                            <div class="saved-account-info">
+                                <span class="saved-account-label">已登入帳號</span>
+                                <span class="saved-account-email">${savedCreds.email}</span>
+                            </div>
+                            <div class="garmin-quick-actions">
+                                <button class="btn-garmin-import btn-one-click" onclick="oneClickImportToGarmin(${dayIndex})">
+                                    直接匯入訓練
+                                </button>
+                                <button class="btn-garmin-logout" onclick="handleGarminLogout()">
+                                    登出
+                                </button>
+                            </div>
+                        </div>
+                    ` : `
+                        <!-- Login form when no credentials saved -->
+                        <div class="garmin-login-form" id="garminLoginForm">
+                            <input type="email" id="garminEmail" placeholder="Garmin Email" class="garmin-input">
+                            <input type="password" id="garminPassword" placeholder="密碼" class="garmin-input">
+                            <div class="garmin-login-hint">登入後帳號將儲存在瀏覽器中，下次可一鍵匯入</div>
+                            <button class="btn-garmin-import" onclick="directImportToGarmin(${dayIndex})">
+                                登入並匯入訓練
+                            </button>
+                        </div>
+                    `}
                 ` : ''}
                 <div id="garminStatus" class="garmin-status"></div>
             </div>
@@ -409,6 +438,44 @@ export function showSettingsSummaryBanner(userFTP, userRunPace, userSwimCSS) {
         `;
         banner.style.display = 'flex';
         banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// ============================================
+// Garmin Logout Handler
+// ============================================
+
+// Store reference to trainingData for refresh
+let storedTrainingData = null;
+
+export function setTrainingDataReference(data) {
+    storedTrainingData = data;
+}
+
+// Handle Garmin logout - clear credentials and refresh UI
+export function handleGarminLogout() {
+    clearGarminCredentials();
+
+    // Update status message
+    const statusEl = document.getElementById('garminStatus');
+    if (statusEl) {
+        statusEl.textContent = '已登出，帳號資訊已清除';
+        statusEl.className = 'garmin-status success';
+        statusEl.style.display = 'block';
+    }
+
+    // Refresh the modal to show login form
+    if (currentWorkoutDayIndex !== undefined && storedTrainingData) {
+        setTimeout(() => {
+            showWorkoutModal(currentWorkoutDayIndex, storedTrainingData, currentWorkoutOverrideDate);
+        }, 800);
+    }
+}
+
+// Refresh Garmin UI section (called after successful import)
+export function refreshGarminUI() {
+    if (currentWorkoutDayIndex !== undefined && storedTrainingData) {
+        showWorkoutModal(currentWorkoutDayIndex, storedTrainingData, currentWorkoutOverrideDate);
     }
 }
 

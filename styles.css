@@ -3010,6 +3010,60 @@ body {
     color: var(--white);
 }
 
+/* Garmin One-Click Import UI */
+.garmin-saved-account {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.saved-account-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+}
+
+.saved-account-label {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.saved-account-email {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.garmin-quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-one-click {
+    background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+    color: var(--white) !important;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-one-click::before {
+    content: '⚡' !important;
+}
+
+.btn-one-click:hover {
+    background: linear-gradient(135deg, #45a049, #3d8b40) !important;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.garmin-login-hint {
+    font-size: 0.8rem;
+    opacity: 0.85;
+    text-align: center;
+    padding: 5px 0;
+}
+
 /* Mobile Garmin Section */
 @media (max-width: 768px) {
     .garmin-section {
@@ -3025,6 +3079,16 @@ body {
     .btn-garmin-import {
         padding: 12px 15px;
         font-size: 1rem;
+    }
+
+    .saved-account-info {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+
+    .garmin-quick-actions {
+        gap: 8px;
     }
 }
 

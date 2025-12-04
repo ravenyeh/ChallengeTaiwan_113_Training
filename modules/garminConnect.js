@@ -3,10 +3,11 @@
 import { convertToGarminWorkout } from './workoutBuilder.js';
 
 // ============================================
-// Session Management
+// Session & Credentials Management
 // ============================================
 
 const GARMIN_SESSION_KEY = 'garmin_session_id';
+const GARMIN_CREDENTIALS_KEY = 'garmin_credentials';
 
 // Get Garmin session from localStorage
 export function getGarminSession() {
@@ -21,6 +22,36 @@ export function setGarminSession(sessionId) {
 // Clear Garmin session
 export function clearGarminSession() {
     localStorage.removeItem(GARMIN_SESSION_KEY);
+}
+
+// Get saved Garmin credentials from localStorage
+export function getGarminCredentials() {
+    const stored = localStorage.getItem(GARMIN_CREDENTIALS_KEY);
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch (e) {
+            return null;
+        }
+    }
+    return null;
+}
+
+// Save Garmin credentials to localStorage
+export function saveGarminCredentials(email, password) {
+    localStorage.setItem(GARMIN_CREDENTIALS_KEY, JSON.stringify({ email, password }));
+}
+
+// Clear saved Garmin credentials
+export function clearGarminCredentials() {
+    localStorage.removeItem(GARMIN_CREDENTIALS_KEY);
+    clearGarminSession();
+}
+
+// Check if credentials are saved
+export function hasGarminCredentials() {
+    const creds = getGarminCredentials();
+    return creds && creds.email && creds.password;
 }
 
 // ============================================
@@ -195,13 +226,26 @@ export async function importAllToGarmin(dayIndex, trainingData, overrideDate = n
 }
 
 // Direct import to Garmin (login + import in one request)
-export async function directImportToGarmin(dayIndex, trainingData, overrideDate = null) {
-    const email = document.getElementById('garminEmail')?.value;
-    const password = document.getElementById('garminPassword')?.value;
+// If useSavedCredentials is true, use stored credentials from localStorage
+export async function directImportToGarmin(dayIndex, trainingData, overrideDate = null, useSavedCredentials = false) {
+    let email, password;
 
-    if (!email || !password) {
-        updateGarminStatus('請輸入 Email 和密碼', true);
-        return;
+    if (useSavedCredentials) {
+        const creds = getGarminCredentials();
+        if (!creds || !creds.email || !creds.password) {
+            updateGarminStatus('找不到已儲存的帳號資訊，請重新登入', true);
+            return;
+        }
+        email = creds.email;
+        password = creds.password;
+    } else {
+        email = document.getElementById('garminEmail')?.value;
+        password = document.getElementById('garminPassword')?.value;
+
+        if (!email || !password) {
+            updateGarminStatus('請輸入 Email 和密碼', true);
+            return;
+        }
     }
 
     const training = trainingData[dayIndex];
@@ -235,7 +279,14 @@ export async function directImportToGarmin(dayIndex, trainingData, overrideDate 
         const data = await response.json();
 
         if (data.success) {
+            // Save credentials on successful import
+            saveGarminCredentials(email, password);
             updateGarminStatus(data.message || '匯入成功！', false);
+
+            // Trigger UI refresh to show one-click import button
+            if (typeof window.refreshGarminUI === 'function') {
+                setTimeout(() => window.refreshGarminUI(), 1500);
+            }
         } else {
             let errorMsg = data.error || '匯入失敗';
             if (data.suggestion) {
@@ -243,10 +294,21 @@ export async function directImportToGarmin(dayIndex, trainingData, overrideDate 
             } else if (data.detail) {
                 errorMsg += '\n' + data.detail;
             }
+
+            // If authentication failed, clear saved credentials
+            if (errorMsg.includes('密碼錯誤') || errorMsg.includes('credentials')) {
+                clearGarminCredentials();
+            }
+
             updateGarminStatus(errorMsg, true);
         }
     } catch (error) {
         console.error('Direct import error:', error);
         updateGarminStatus('連線錯誤\n請使用「複製 JSON」或「下載 .json」手動匯入至 Garmin Connect', true);
     }
+}
+
+// One-click import using saved credentials
+export async function oneClickImportToGarmin(dayIndex, trainingData, overrideDate = null) {
+    return directImportToGarmin(dayIndex, trainingData, overrideDate, true);
 }
