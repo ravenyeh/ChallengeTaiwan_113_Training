@@ -3292,6 +3292,42 @@ body {
     font-size: 1.1rem;
 }
 
+.comparison-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #1976d2, #2196f3);
+    color: white;
+    text-decoration: none;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.comparison-link:hover {
+    background: linear-gradient(135deg, #1565c0, #1976d2);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+    transform: translateY(-1px);
+}
+
+.comparison-icon {
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .comparison-link {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .comparison-link span:last-child {
+        display: none;
+    }
+}
+
 .training-plan-selector {
     display: flex;
     gap: 15px;
