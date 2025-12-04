@@ -405,8 +405,10 @@ function displayTodayTraining() {
             const hasWorkout = todayTraining.swim || todayTraining.bike || todayTraining.run;
             if (hasWorkout) {
                 const todayIndex = trainingData.findIndex(d => d.date === todayTraining.date);
+                // Use today's local date for import scheduling
+                const todayLocalDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
                 todayActions.innerHTML = `
-                    <button class="btn-today-workout" onclick="showWorkoutModal(${todayIndex}, null)">
+                    <button class="btn-today-workout" onclick="showWorkoutModal(${todayIndex}, '${todayLocalDate}')">
                         查看今日訓練
                     </button>
                 `;
