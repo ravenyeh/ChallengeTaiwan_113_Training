@@ -18,9 +18,9 @@ export const TRAINING_PLANS = {
     'garmin-tri': {
         id: 'garmin-tri',
         name: 'Garmin TRI 課表',
-        description: '15 週訓練營課表 (1/15 - 4/28)',
-        startDate: 'January 15, 2026',
-        raceDate: 'April 28, 2026'
+        description: '15 週訓練營課表 (1/12 - 4/25)',
+        startDate: 'January 12, 2026',
+        raceDate: 'April 25, 2026'
     }
 };
 
