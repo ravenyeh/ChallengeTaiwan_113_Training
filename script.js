@@ -441,9 +441,10 @@ function displayTodayTraining() {
         const lastTrainingDate = new Date(trainingData[trainingData.length - 1].date);
 
         if (now < firstTrainingDate) {
-            // 隨機從建構期挑選一天有訓練的課表來預覽
+            // 隨機從有訓練的日子挑選一天來預覽（排除賽前週和比賽日）
+            const previewPhases = ['建構期', '基礎期', '巔峰期', '基礎強化期', '速度節奏強化期', '強化調整期'];
             const buildPhaseWorkouts = trainingData.filter(day =>
-                day.phase === '建構期' && (day.swim || day.bike || day.run)
+                previewPhases.includes(day.phase) && (day.swim || day.bike || day.run)
             );
 
             if (buildPhaseWorkouts.length > 0) {
