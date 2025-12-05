@@ -72,8 +72,12 @@ export function generateSwimSteps(totalDistance, content) {
     // Check for intervals pattern like "6x400m" or "10x200m"
     const intervalMatch = content.match(/(\d+)\s*[xX×]\s*(\d+)m/);
     // Check for drill/technique content
-    const hasTechnique = content.includes('技術') || content.includes('划手');
-    const hasDrill = content.includes('踢水') || content.includes('分解');
+    const hasTechnique = content.includes('技術') || content.includes('划手') || content.includes('姿勢調整') || content.includes('姿勢');
+    const hasDrill = content.includes('踢水') || content.includes('分解') || content.includes('腿');
+    const hasBreathing = content.includes('呼吸') || content.includes('換氣');
+    const hasPull = content.includes('臂划') || content.includes('臂/腿');
+    const hasSprint = content.includes('全力游') || content.includes('衝刺');
+    const hasMixedStroke = content.includes('蛙/自') || content.includes('蛙泳') || content.includes('混合');
 
     if (intervalMatch) {
         const reps = parseInt(intervalMatch[1]);
@@ -94,7 +98,13 @@ export function generateSwimSteps(totalDistance, content) {
         });
 
         // Drill set if technique day
-        if (hasTechnique || hasDrill) {
+        if (hasTechnique || hasDrill || hasBreathing || hasPull) {
+            let drillDesc = '技術分解練習';
+            if (hasBreathing) drillDesc = '呼吸/換氣練習';
+            else if (hasPull) drillDesc = '臂划練習';
+            else if (hasDrill) drillDesc = '踢水/腿部練習';
+            else if (hasTechnique) drillDesc = '姿勢調整練習';
+
             steps.push({
                 stepOrder: stepOrder++,
                 stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
@@ -106,7 +116,7 @@ export function generateSwimSteps(totalDistance, content) {
                         endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                         endConditionValue: 50,
                         ...createSwimPaceTarget(zones.technique.pace - 10, zones.technique.pace + 15),
-                        description: `${zones.technique.name}練習 (划手/踢水)`
+                        description: drillDesc
                     },
                     {
                         stepOrder: 2,
@@ -116,7 +126,7 @@ export function generateSwimSteps(totalDistance, content) {
                         targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
                     }
                 ],
-                description: '4x50m 技術分解練習'
+                description: `4x50m ${drillDesc}`
             });
         }
 
@@ -140,6 +150,20 @@ export function generateSwimSteps(totalDistance, content) {
 
         // Main set: Interval repeat
         const restTime = distance >= 400 ? 45 : distance >= 200 ? 30 : 20;
+
+        // Determine pace target based on workout type
+        let targetPace, paceDesc;
+        if (hasSprint) {
+            targetPace = createSwimPaceTarget(zones.sprint.pace - 5, zones.sprint.pace + 10);
+            paceDesc = zones.sprint.name;
+        } else if (hasMixedStroke) {
+            targetPace = createSwimPaceTarget(zones.aerobic.pace - 5, zones.aerobic.pace + 10);
+            paceDesc = `${zones.aerobic.name} (蛙/自混合)`;
+        } else {
+            targetPace = createSwimPaceTarget(zones.threshold.pace - 5, zones.threshold.pace + 5);
+            paceDesc = zones.threshold.name;
+        }
+
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
@@ -150,8 +174,8 @@ export function generateSwimSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: distance,
-                    ...createSwimPaceTarget(zones.threshold.pace - 5, zones.threshold.pace + 5),
-                    description: `主課表 ${distance}m @ ${zones.threshold.name}`
+                    ...targetPace,
+                    description: `主課表 ${distance}m @ ${paceDesc}`
                 },
                 {
                     stepOrder: 2,
@@ -161,7 +185,7 @@ export function generateSwimSteps(totalDistance, content) {
                     targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' }
                 }
             ],
-            description: `${reps}x${distance}m 主課表 @ ${zones.threshold.name} (休息${restTime}秒)`
+            description: `${reps}x${distance}m 主課表 @ ${paceDesc} (休息${restTime}秒)`
         });
 
         // Cooldown
@@ -367,7 +391,71 @@ export function generateBikeSteps(totalDistance, content) {
     // Check for FTP intervals
     const ftpMatch = content.match(/(\d+)\s*[xX×]\s*(\d+)\s*分鐘.*FTP/i);
 
-    if (ssMatch || content.includes('Sweet Spot')) {
+    // Garmin TRI patterns - FTP percentage based workouts
+    // Pattern: "50%-60% FTP" or "80% FTP" or "120% FTP"
+    const ftpPercentMatch = content.match(/(\d+)%?\s*[-~]?\s*(\d+)?%?\s*FTP/i);
+    // Pattern for short sprint intervals: "12x20sec 120% FTP"
+    const sprintMatch = content.match(/(\d+)\s*[xX×]\s*(\d+)\s*sec.*?(\d+)%?\s*FTP/i);
+    // Pattern for time-based FTP intervals: "6x87% FTP" or "4x5min 90% FTP"
+    const ftpIntervalMatch = content.match(/(\d+)\s*[xX×]\s*(\d+)?%?\s*FTP/i);
+    // Check for cadence target: "踏頻90+" or "踏頻85-95rpm"
+    const cadenceMatch = content.match(/踏頻\s*(\d+)(?:\s*[-~]\s*(\d+))?/);
+
+    if (sprintMatch) {
+        // Short sprint intervals like "12x20sec 120% FTP"
+        const reps = parseInt(sprintMatch[1]);
+        const seconds = parseInt(sprintMatch[2]);
+        const targetPercent = parseInt(sprintMatch[3]);
+        const targetPower = Math.round(ftp * targetPercent / 100);
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+            endConditionValue: 600,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '熱身 10分鐘'
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: reps,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: seconds,
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: Math.round(targetPower * 0.95),
+                    targetValueTwo: Math.round(targetPower * 1.05),
+                    description: `衝刺 ${seconds}秒 @ ${targetPercent}% FTP (${targetPower}W)`
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                    endConditionValue: 90,
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: zones.Z1.low,
+                    targetValueTwo: zones.Z1.high,
+                    description: '恢復 90秒'
+                }
+            ],
+            description: `${reps}x${seconds}秒 @ ${targetPercent}% FTP`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+            endConditionValue: 600,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和 10分鐘'
+        });
+
+    } else if (ssMatch || content.includes('Sweet Spot')) {
         // Sweet Spot workout
         const reps = ssMatch ? parseInt(ssMatch[1]) : 3;
         const minutes = ssMatch ? parseInt(ssMatch[2]) : 10;
@@ -632,6 +720,63 @@ export function generateBikeSteps(totalDistance, content) {
             description: '緩和'
         });
 
+    } else if (ftpPercentMatch) {
+        // FTP percentage based workout (Garmin TRI pattern)
+        // Examples: "50%-60% FTP", "80% FTP", "70%-85% FTP"
+        const lowPercent = parseInt(ftpPercentMatch[1]);
+        const highPercent = ftpPercentMatch[2] ? parseInt(ftpPercentMatch[2]) : lowPercent + 10;
+        const lowPower = Math.round(ftp * lowPercent / 100);
+        const highPower = Math.round(ftp * highPercent / 100);
+
+        // Extract cadence if specified
+        const minCadence = cadenceMatch ? parseInt(cadenceMatch[1]) : 85;
+        const maxCadence = cadenceMatch ? (cadenceMatch[2] ? parseInt(cadenceMatch[2]) : minCadence + 10) : 95;
+
+        const warmupDist = Math.round(totalDistance * 0.1);
+        const cooldownDist = Math.round(totalDistance * 0.1);
+        const mainDist = totalDistance - warmupDist - cooldownDist;
+
+        // Determine workout type based on intensity
+        const avgPercent = (lowPercent + highPercent) / 2;
+        let zoneDesc = '';
+        if (avgPercent <= 60) zoneDesc = 'Z1-Z2 恢復/有氧';
+        else if (avgPercent <= 75) zoneDesc = 'Z2 耐力';
+        else if (avgPercent <= 90) zoneDesc = 'Z3 Tempo/Sweet Spot';
+        else if (avgPercent <= 105) zoneDesc = 'Z4 閾值';
+        else zoneDesc = 'Z5+ VO2max';
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: warmupDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '熱身 - 漸進提升至目標強度'
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: mainDist,
+            targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
+            targetValueOne: lowPower,
+            targetValueTwo: highPower,
+            secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence.zone' },
+            secondaryTargetValueOne: minCadence,
+            secondaryTargetValueTwo: maxCadence,
+            description: `主課表 @ ${lowPercent}-${highPercent}% FTP (${lowPower}-${highPower}W) - ${zoneDesc}`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: cooldownDist,
+            targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+            description: '緩和'
+        });
+
     } else {
         // Standard Z2 ride with some tempo
         const warmupDist = Math.round(totalDistance * 0.1);
@@ -718,9 +863,148 @@ export function generateRunSteps(totalDistance, content) {
     // Check for interval pattern like "8x1km" or "6x1.2km" or "10x400m"
     const intervalMatch = content.match(/(\d+)\s*[xX×]\s*([\d.]+)\s*(km|m)/i);
     // Check for brick workout (bike then run)
-    const isBrick = content.includes('磚式') || content.includes('騎轉跑');
+    const isBrick = content.includes('磚式') || content.includes('騎轉跑') || content.includes('轉換');
+    // Garmin TRI patterns
+    const isHillRepeat = content.includes('爬坡') || content.includes('上坡');
+    const isLadder = content.match(/(\d+)\/(\d+)\/(\d+)/); // Pattern: 3/3/2/1km
+    const isAerobic = content.includes('有氧跑') || content.includes('有氧');
+    const isEasy = content.includes('慢跑') || content.includes('輕鬆跑');
 
-    if (intervalMatch) {
+    if (isLadder) {
+        // Ladder intervals like "3/3/2/1km間歇"
+        const distances = content.match(/[\d.]+/g).slice(0, 5).map(d => parseFloat(d) * 1000);
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: 2000,
+            ...createPaceTarget(zones.easy.pace - 15, zones.easy.pace + 15),
+            description: `熱身慢跑 2km @ ${zones.easy.name}`
+        });
+
+        // Strides
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: 3,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: 100,
+                    ...createPaceTarget(zones.rep.pace, zones.easy.pace),
+                    description: '漸速跑激活'
+                }
+            ],
+            description: '3x100m 漸速跑'
+        });
+
+        // Main ladder intervals - shorter distance = faster pace
+        distances.forEach((dist, idx) => {
+            if (dist > 0) {
+                // Determine pace based on distance: shorter = faster
+                let targetPace, paceDesc;
+                if (dist >= 3000) {
+                    // 3km+ → Threshold pace (T配速)
+                    targetPace = createPaceTarget(zones.tempo.pace - 5, zones.tempo.pace + 10);
+                    paceDesc = zones.tempo.name;
+                } else if (dist >= 2000) {
+                    // 2km → Interval pace (I配速)
+                    targetPace = createPaceTarget(zones.interval.pace - 5, zones.interval.pace + 10);
+                    paceDesc = zones.interval.name;
+                } else if (dist >= 1000) {
+                    // 1km → Fast interval pace
+                    targetPace = createPaceTarget(zones.interval.pace - 15, zones.interval.pace);
+                    paceDesc = `快速 ${zones.interval.name}`;
+                } else {
+                    // <1km → Rep pace (R配速)
+                    targetPace = createPaceTarget(zones.rep.pace - 5, zones.rep.pace + 10);
+                    paceDesc = zones.rep.name;
+                }
+
+                steps.push({
+                    stepOrder: stepOrder++,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: dist,
+                    ...targetPace,
+                    description: `間歇 ${dist/1000}km @ ${paceDesc}`
+                });
+                // Recovery jog between intervals (except after last)
+                if (idx < distances.length - 1) {
+                    const restTime = dist >= 2000 ? 120 : dist >= 1000 ? 90 : 60;
+                    steps.push({
+                        stepOrder: stepOrder++,
+                        stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
+                        endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                        endConditionValue: restTime,
+                        ...createPaceTarget(zones.recovery.pace - 30, zones.recovery.pace + 60),
+                        description: `恢復 ${restTime}秒`
+                    });
+                }
+            }
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: 1500,
+            ...createPaceTarget(zones.recovery.pace - 15, zones.recovery.pace + 30),
+            description: `緩和慢跑 1.5km`
+        });
+
+    } else if (isHillRepeat) {
+        // Hill repeat workout
+        const reps = intervalMatch ? parseInt(intervalMatch[1]) : 6;
+        const distance = intervalMatch ? parseFloat(intervalMatch[2]) * (intervalMatch[3] === 'km' ? 1000 : 1) : 400;
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: 2000,
+            ...createPaceTarget(zones.easy.pace - 15, zones.easy.pace + 15),
+            description: `熱身慢跑 2km @ ${zones.easy.name}`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
+            numberOfIterations: reps,
+            workoutSteps: [
+                {
+                    stepOrder: 1,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: distance,
+                    ...createPaceTarget(zones.interval.pace - 15, zones.interval.pace + 5),
+                    description: `上坡衝刺 ${distance}m @ ${zones.interval.name}`
+                },
+                {
+                    stepOrder: 2,
+                    stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: distance,
+                    ...createPaceTarget(zones.recovery.pace - 30, zones.recovery.pace + 60),
+                    description: `下坡慢跑恢復 ${distance}m`
+                }
+            ],
+            description: `${reps}x${distance}m 爬坡訓練`
+        });
+
+        steps.push({
+            stepOrder: stepOrder++,
+            stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
+            endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+            endConditionValue: 2000,
+            ...createPaceTarget(zones.recovery.pace - 15, zones.recovery.pace + 30),
+            description: `緩和慢跑 2km`
+        });
+
+    } else if (intervalMatch) {
         const reps = parseInt(intervalMatch[1]);
         const distanceValue = parseFloat(intervalMatch[2]);
         const unit = intervalMatch[3].toLowerCase();

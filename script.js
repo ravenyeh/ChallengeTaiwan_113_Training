@@ -2,7 +2,8 @@
 // Imports and coordinates all modules for the Challenge Taiwan 113 Training Plan
 
 // Import training data
-import { trainingData } from './modules/trainingData.js';
+import { trainingData as aiTrainingData } from './modules/trainingData.js';
+import { garminTriData } from './modules/garminTriData.js';
 
 // Import utility functions
 import { formatDate, parsePaceToSeconds, formatSecondsToPace } from './modules/utils.js';
@@ -12,6 +13,9 @@ import {
     getUserFTP,
     getUserRunPace,
     getUserSwimCSS,
+    getUserTrainingPlan,
+    setUserTrainingPlan,
+    TRAINING_PLANS,
     saveUserSettings as saveSettings,
     updateSettingsDisplay,
     toggleAdvancedSettings,
@@ -56,6 +60,21 @@ import {
 
 let currentWorkoutDayIndex = undefined;
 let currentWorkoutOverrideDate = null;
+
+// Training data mapping
+const trainingDataMap = {
+    'ai': aiTrainingData,
+    'garmin-tri': garminTriData
+};
+
+// Get current training data based on user selection
+function getTrainingData() {
+    const planId = getUserTrainingPlan();
+    return trainingDataMap[planId] || aiTrainingData;
+}
+
+// Alias for backward compatibility
+const trainingData = getTrainingData();
 
 // ============================================
 // Schedule Table
@@ -549,6 +568,52 @@ function oneClickImportToGarmin(dayIndex) {
     garminOneClickImport(dayIndex, trainingData, currentWorkoutOverrideDate);
 }
 
+// Switch training plan
+function switchTrainingPlan(planId) {
+    if (setUserTrainingPlan(planId)) {
+        // Reload page to apply new training data
+        window.location.reload();
+    }
+}
+
+// Initialize training plan selector
+function initTrainingPlanSelector() {
+    const selector = document.getElementById('trainingPlanSelector');
+    if (!selector) return;
+
+    const currentPlan = getUserTrainingPlan();
+
+    // Build selector HTML
+    let html = '';
+    Object.values(TRAINING_PLANS).forEach(plan => {
+        const isActive = plan.id === currentPlan;
+        html += `
+            <div class="plan-option ${isActive ? 'active' : ''}" data-plan="${plan.id}">
+                <div class="plan-radio">
+                    <input type="radio" name="trainingPlan" id="plan-${plan.id}"
+                           value="${plan.id}" ${isActive ? 'checked' : ''}>
+                </div>
+                <label for="plan-${plan.id}" class="plan-info">
+                    <span class="plan-name">${plan.name}</span>
+                    <span class="plan-desc">${plan.description}</span>
+                </label>
+            </div>
+        `;
+    });
+
+    selector.innerHTML = html;
+
+    // Add click handlers
+    selector.querySelectorAll('.plan-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const planId = option.dataset.plan;
+            if (planId !== currentPlan) {
+                switchTrainingPlan(planId);
+            }
+        });
+    });
+}
+
 // ============================================
 // Initialize Application
 // ============================================
@@ -558,6 +623,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set training data reference for UI module (used for Garmin refresh)
     setTrainingDataReference(trainingData);
+
+    // Initialize training plan selector
+    initTrainingPlanSelector();
 
     // Update settings display
     updateSettingsDisplay();
@@ -675,6 +743,7 @@ window.refreshGarminUI = refreshGarminUI;
 window.downloadWorkoutJson = downloadWorkoutJson;
 window.downloadWorkoutZwo = downloadWorkoutZwo;
 window.downloadWorkoutErg = downloadWorkoutErg;
+window.switchTrainingPlan = switchTrainingPlan;
 
 // Export for potential external use
 export {
