@@ -1,7 +1,7 @@
 // Garmin TRI CT113 倒數 100 天課表
 // 比賽日期：2026/4/25 (星期六) - Challenge Taiwan
 // 訓練開始：2026/1/12 (星期一)
-// 課表來源：Garmin TRI 訓練營
+// 課表來源：Garmin TRI 訓練營 https://www.garmin.com.tw/event/2024/garmin-tri/
 
 export const garminTriData = [
     // Week 1 - 基礎強化期 (1/12-1/18)
