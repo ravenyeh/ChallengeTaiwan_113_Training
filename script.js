@@ -617,6 +617,34 @@ function initTrainingPlanSelector() {
     });
 }
 
+// Initialize phase filter buttons based on selected training plan
+function initPhaseFilters() {
+    const filtersContainer = document.querySelector('.schedule-filters');
+    if (!filtersContainer) return;
+
+    const currentPlan = getUserTrainingPlan();
+    const planConfig = TRAINING_PLANS[currentPlan];
+    const phases = planConfig?.phases || ['基礎期', '建構期', '巔峰期', '減量期', '賽前週'];
+
+    // Build filter buttons HTML
+    let html = '<button class="filter-btn active" data-filter="all">全部</button>';
+    phases.forEach(phase => {
+        html += `<button class="filter-btn" data-filter="${phase}">${phase}</button>`;
+    });
+
+    filtersContainer.innerHTML = html;
+
+    // Setup click handlers
+    const filterBtns = filtersContainer.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            populateSchedule(btn.dataset.filter);
+        });
+    });
+}
+
 // ============================================
 // Initialize Application
 // ============================================
@@ -636,18 +664,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show settings summary banner if user has saved settings
     initSettingsSummaryBanner();
 
+    // Initialize phase filter buttons
+    initPhaseFilters();
+
     // Populate schedule table
     populateSchedule();
-
-    // Setup filter buttons
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            populateSchedule(btn.dataset.filter);
-        });
-    });
 
     // Smooth scroll for navigation
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {

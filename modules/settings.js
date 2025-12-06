@@ -14,7 +14,8 @@ export const TRAINING_PLANS = {
         description: '16 週訓練計劃 (1/5 - 4/25)',
         startDate: 'January 5, 2026',
         raceDate: 'April 25, 2026',
-        logo: null
+        logo: null,
+        phases: ['基礎期', '建構期', '巔峰期', '減量期', '賽前週']
     },
     'garmin-tri': {
         id: 'garmin-tri',
@@ -23,7 +24,8 @@ export const TRAINING_PLANS = {
         startDate: 'January 12, 2026',
         raceDate: 'April 25, 2026',
         logo: 'https://www.logo.wine/a/logo/Garmin/Garmin-Logo.wine.svg',
-        source: 'https://www.garmin.com.tw/event/2024/garmin-tri/'
+        source: 'https://www.garmin.com.tw/event/2024/garmin-tri/',
+        phases: ['基礎強化期', '速度節奏強化期', '強化調整期', '減量期', '賽前週']
     }
 };
 
