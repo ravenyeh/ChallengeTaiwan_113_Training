@@ -13,14 +13,17 @@ export const TRAINING_PLANS = {
         name: 'AI 生成課表',
         description: '16 週訓練計劃 (1/5 - 4/25)',
         startDate: 'January 5, 2026',
-        raceDate: 'April 25, 2026'
+        raceDate: 'April 25, 2026',
+        logo: null
     },
     'garmin-tri': {
         id: 'garmin-tri',
         name: 'Garmin TRI 課表',
         description: '15 週訓練營課表 (1/12 - 4/25)',
         startDate: 'January 12, 2026',
-        raceDate: 'April 25, 2026'
+        raceDate: 'April 25, 2026',
+        logo: 'https://www.logo.wine/a/logo/Garmin/Garmin-Logo.wine.svg',
+        source: 'https://www.garmin.com.tw/event/2024/garmin-tri/'
     }
 };
 

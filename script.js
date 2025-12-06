@@ -588,6 +588,7 @@ function initTrainingPlanSelector() {
     let html = '';
     Object.values(TRAINING_PLANS).forEach(plan => {
         const isActive = plan.id === currentPlan;
+        const logoHtml = plan.logo ? `<img src="${plan.logo}" alt="${plan.name}" class="plan-logo">` : '';
         html += `
             <div class="plan-option ${isActive ? 'active' : ''}" data-plan="${plan.id}">
                 <div class="plan-radio">
@@ -597,6 +598,7 @@ function initTrainingPlanSelector() {
                 <label for="plan-${plan.id}" class="plan-info">
                     <span class="plan-name">${plan.name}</span>
                     <span class="plan-desc">${plan.description}</span>
+                    ${logoHtml}
                 </label>
             </div>
         `;
