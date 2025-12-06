@@ -3402,6 +3402,21 @@ body {
     line-height: 1.4;
 }
 
+.plan-logo {
+    height: 20px;
+    width: auto;
+    margin-top: 8px;
+    opacity: 0.8;
+    filter: grayscale(0.3);
+    transition: var(--transition);
+}
+
+.plan-option:hover .plan-logo,
+.plan-option.active .plan-logo {
+    opacity: 1;
+    filter: grayscale(0);
+}
+
 /* Mobile Training Plan Selector */
 @media (max-width: 768px) {
     .training-plan-selector-wrapper {
