@@ -51,7 +51,8 @@ import {
     initWeeklyMileageChart,
     handleGarminLogout,
     refreshGarminUI,
-    setTrainingDataReference
+    setTrainingDataReference,
+    toggleWorkoutNotes
 } from './modules/ui.js';
 
 // ============================================
@@ -768,6 +769,7 @@ window.downloadWorkoutJson = downloadWorkoutJson;
 window.downloadWorkoutZwo = downloadWorkoutZwo;
 window.downloadWorkoutErg = downloadWorkoutErg;
 window.switchTrainingPlan = switchTrainingPlan;
+window.toggleWorkoutNotes = toggleWorkoutNotes;
 
 // Export for potential external use
 export {
