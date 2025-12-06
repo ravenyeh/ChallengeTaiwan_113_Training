@@ -3442,3 +3442,210 @@ body {
         font-size: 0.8rem;
     }
 }
+
+/* ============================================
+   Workout Notes Styles
+   訓練說明樣式
+   ============================================ */
+
+.btn-view-notes {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 16px;
+    margin: 15px 0;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 1px solid #90caf9;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1565c0;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-view-notes:hover {
+    background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%);
+    border-color: #64b5f6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.btn-view-notes.expanded {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    border-color: #1565c0;
+    color: white;
+}
+
+.btn-view-notes .notes-icon {
+    font-size: 1.1rem;
+}
+
+.btn-view-notes .notes-toggle-icon {
+    font-size: 0.7rem;
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+.btn-view-notes.expanded .notes-toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Workout Notes Container */
+.workout-notes {
+    background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 10px 0 15px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Notes Sections */
+.notes-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.notes-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* Notes Purpose - Training Goal */
+.notes-purpose {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+}
+
+/* Notes Warmup */
+.notes-warmup {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #ff9800;
+}
+
+/* Notes Main Set */
+.notes-mainset {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #2196f3;
+}
+
+/* Notes Cooldown */
+.notes-cooldown {
+    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #9c27b0;
+}
+
+/* Notes Intensity */
+.notes-intensity {
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+/* Notes RPE */
+.notes-rpe {
+    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #607d8b;
+}
+
+/* Notes Typography */
+.workout-notes strong,
+.notes-section strong {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+.workout-notes p,
+.notes-section p {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text-color);
+    margin: 0;
+}
+
+/* Notes list items styling */
+.notes-section .list-item {
+    display: block;
+    padding-left: 10px;
+    margin: 4px 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.notes-section .list-item-indent {
+    padding-left: 25px;
+}
+
+/* Notes section spacing */
+.notes-section br + br {
+    display: block;
+    margin-top: 8px;
+}
+
+/* Zone/RPE highlight styling */
+.workout-notes code,
+.notes-section code {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85em;
+}
+
+/* Mobile Notes Styles */
+@media (max-width: 768px) {
+    .btn-view-notes {
+        padding: 10px 14px;
+        font-size: 0.9rem;
+    }
+
+    .workout-notes {
+        padding: 15px;
+        margin: 8px 0 12px;
+    }
+
+    .notes-section {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+
+    .workout-notes strong,
+    .notes-section strong {
+        font-size: 0.85rem;
+    }
+
+    .workout-notes p,
+    .notes-section p {
+        font-size: 0.8rem;
+    }
+}

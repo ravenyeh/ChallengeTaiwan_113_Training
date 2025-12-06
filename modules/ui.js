@@ -10,6 +10,7 @@ import {
     getGarminCredentials,
     clearGarminCredentials
 } from './garminConnect.js';
+import { generateWorkoutNotes, formatNotesForDisplay } from './workoutNotes.js';
 
 // ============================================
 // Global State
@@ -236,6 +237,9 @@ export function showWorkoutModal(dayIndex, trainingData, overrideDate = null) {
             <div class="training-description">${training.content}</div>
     `;
 
+    // Generate workout notes for this training day
+    const workoutNotes = generateWorkoutNotes(training);
+
     if (workouts.length === 0) {
         html += `<div class="no-workout">此日無訓練內容</div>`;
     } else {
@@ -245,6 +249,11 @@ export function showWorkoutModal(dayIndex, trainingData, overrideDate = null) {
 
             const escapedName = workout.data.workoutName.replace(/'/g, "\\'").replace(/"/g, '\\"');
             const stepsPreview = renderWorkoutStepsPreview(workout.data, workout.type);
+
+            // Get notes for this workout type
+            const notes = workoutNotes[workout.type];
+            const notesHtml = notes ? formatNotesForDisplay(notes) : '';
+
             html += `
                 <div class="workout-section" style="border-left: 4px solid ${typeColor}">
                     <div class="workout-header">
@@ -256,6 +265,16 @@ export function showWorkoutModal(dayIndex, trainingData, overrideDate = null) {
                         <span>距離: ${(workout.data.estimatedDistanceInMeters / 1000).toFixed(1)} km</span>
                         <span>預估時間: ${Math.round(workout.data.estimatedDurationInSecs / 60)} 分鐘</span>
                     </div>
+                    ${notesHtml ? `
+                        <button class="btn-view-notes" onclick="toggleWorkoutNotes('workout-notes-${idx}')">
+                            <span class="notes-icon">📋</span>
+                            <span>查看訓練說明</span>
+                            <span class="notes-toggle-icon">▼</span>
+                        </button>
+                        <div class="workout-notes" id="workout-notes-${idx}" style="display: none;">
+                            ${notesHtml}
+                        </div>
+                    ` : ''}
                     ${stepsPreview}
                     <input type="hidden" id="workout-json-${idx}" value='${JSON.stringify(workout.data)}'>
                     <div class="workout-export-buttons">
@@ -476,6 +495,33 @@ export function handleGarminLogout() {
 export function refreshGarminUI() {
     if (currentWorkoutDayIndex !== undefined && storedTrainingData) {
         showWorkoutModal(currentWorkoutDayIndex, storedTrainingData, currentWorkoutOverrideDate);
+    }
+}
+
+// ============================================
+// Workout Notes Toggle
+// ============================================
+
+export function toggleWorkoutNotes(notesId) {
+    const notesEl = document.getElementById(notesId);
+    const btn = notesEl?.previousElementSibling;
+
+    if (notesEl) {
+        const isHidden = notesEl.style.display === 'none';
+        notesEl.style.display = isHidden ? 'block' : 'none';
+
+        // Update button text and icon
+        if (btn && btn.classList.contains('btn-view-notes')) {
+            const toggleIcon = btn.querySelector('.notes-toggle-icon');
+            const textSpan = btn.querySelectorAll('span')[1];
+            if (toggleIcon) {
+                toggleIcon.textContent = isHidden ? '▲' : '▼';
+            }
+            if (textSpan) {
+                textSpan.textContent = isHidden ? '隱藏訓練說明' : '查看訓練說明';
+            }
+            btn.classList.toggle('expanded', isHidden);
+        }
     }
 }
 
