@@ -633,6 +633,9 @@ export function generateBikeSteps(totalDistance, content) {
         const cooldownDist = 5000;
         const mainDist = totalDistance - warmupDist - cooldownDist;
 
+        // Check if rest breaks are mentioned (e.g., "每1.5hrs休息")
+        const hasRestBreaks = content.includes('休息');
+
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
@@ -644,38 +647,66 @@ export function generateBikeSteps(totalDistance, content) {
             description: `熱身 10km @ ${zones.Z1.name}~${zones.Z2.name}區`
         });
 
-        // Main aerobic blocks
-        const blockDistance = 20000;
-        const blocks = Math.floor(mainDist / blockDistance);
+        if (hasRestBreaks) {
+            // Split into blocks with rest breaks
+            const blockDistance = 25000; // ~45min at 33km/h, rest every ~1.5hrs means 2 blocks then rest
+            const blocks = Math.floor(mainDist / blockDistance);
+            const remainingDist = mainDist - (blocks * blockDistance);
 
-        for (let i = 0; i < blocks; i++) {
+            for (let i = 0; i < blocks; i++) {
+                steps.push({
+                    stepOrder: stepOrder++,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: blockDistance,
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: zones.Z2.low,
+                    targetValueTwo: zones.Z2.high,
+                    secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence.zone' },
+                    secondaryTargetValueOne: 85,
+                    secondaryTargetValueTwo: 95,
+                    description: `${zones.Z2.name}區 (${i+1}/${blocks})`
+                });
+
+                // Add rest break after every 2 blocks (roughly 1.5hrs)
+                if ((i + 1) % 2 === 0 && i < blocks - 1) {
+                    steps.push({
+                        stepOrder: stepOrder++,
+                        stepType: { stepTypeId: 5, stepTypeKey: 'rest' },
+                        endCondition: { conditionTypeId: 2, conditionTypeKey: 'time' },
+                        endConditionValue: 300, // 5 minutes rest
+                        targetType: { workoutTargetTypeId: 1, workoutTargetTypeKey: 'no.target' },
+                        description: '休息補給 5分鐘'
+                    });
+                }
+            }
+
+            if (remainingDist > 0) {
+                steps.push({
+                    stepOrder: stepOrder++,
+                    stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
+                    endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
+                    endConditionValue: remainingDist,
+                    targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
+                    targetValueOne: zones.Z2.low,
+                    targetValueTwo: zones.Z2.high,
+                    description: `${zones.Z2.name}區`
+                });
+            }
+        } else {
+            // Single continuous main block (no rest breaks mentioned)
             steps.push({
                 stepOrder: stepOrder++,
                 stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                 endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-                endConditionValue: blockDistance,
+                endConditionValue: mainDist,
                 targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
                 targetValueOne: zones.Z2.low,
                 targetValueTwo: zones.Z2.high,
                 secondaryTargetType: { workoutTargetTypeId: 3, workoutTargetTypeKey: 'cadence.zone' },
                 secondaryTargetValueOne: 85,
                 secondaryTargetValueTwo: 95,
-                description: `${zones.Z2.name}區 (${i+1}/${blocks})`
-            });
-        }
-
-        // Remaining distance
-        const remainingDist = mainDist - (blocks * blockDistance);
-        if (remainingDist > 0) {
-            steps.push({
-                stepOrder: stepOrder++,
-                stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
-                endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
-                endConditionValue: remainingDist,
-                targetType: { workoutTargetTypeId: 2, workoutTargetTypeKey: 'power.zone' },
-                targetValueOne: zones.Z2.low,
-                targetValueTwo: zones.Z2.high,
-                description: `${zones.Z2.name}區`
+                description: `${zones.Z2.name}區 有氧騎乘`
             });
         }
 
