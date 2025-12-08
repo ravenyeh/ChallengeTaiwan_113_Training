@@ -124,6 +124,46 @@ export function trackWorkoutView(workout) {
         totalHours: workout.hours,
         content: workout.content?.substring(0, 100) // Truncate for storage
     });
+
+    // Also update daily stats counter
+    updateWorkoutViewStats();
+}
+
+/**
+ * Update workout view count in daily stats
+ */
+async function updateWorkoutViewStats() {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const statsPath = `${FIREBASE_DB_URL}/daily_stats/${today}.json`;
+
+        // Get current stats
+        const response = await fetch(statsPath);
+        let stats = response.ok ? await response.json() : null;
+
+        if (!stats) {
+            stats = {
+                pageViews: 0,
+                uniqueSessions: [],
+                uniqueUsers: [],
+                planViews: { ai: 0, 'garmin-tri': 0 },
+                garminImports: { success: 0, failed: 0 },
+                workoutViews: 0
+            };
+        }
+
+        // Update workout views counter
+        stats.workoutViews = (stats.workoutViews || 0) + 1;
+
+        // Save updated stats
+        await fetch(statsPath, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(stats)
+        });
+    } catch (error) {
+        console.warn('Failed to update workout view stats:', error.message);
+    }
 }
 
 /**
@@ -140,6 +180,58 @@ export function trackGarminImport(details) {
         errorMessage: details.error?.substring(0, 200) || null,
         method: details.method || 'direct' // 'direct' or 'one-click'
     });
+
+    // Also update daily stats counters
+    updateGarminImportStats(details.success);
+}
+
+/**
+ * Update Garmin import success/failure counts in daily stats
+ * @param {boolean} success - Whether the import was successful
+ */
+async function updateGarminImportStats(success) {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const statsPath = `${FIREBASE_DB_URL}/daily_stats/${today}.json`;
+
+        // Get current stats
+        const response = await fetch(statsPath);
+        let stats = response.ok ? await response.json() : null;
+
+        if (!stats) {
+            stats = {
+                pageViews: 0,
+                uniqueSessions: [],
+                uniqueUsers: [],
+                planViews: { ai: 0, 'garmin-tri': 0 },
+                garminImports: { success: 0, failed: 0 },
+                workoutViews: 0
+            };
+        }
+
+        // Ensure garminImports object exists
+        if (!stats.garminImports) {
+            stats.garminImports = { success: 0, failed: 0 };
+        }
+
+        // Update the appropriate counter
+        if (success) {
+            stats.garminImports.success = (stats.garminImports.success || 0) + 1;
+        } else {
+            stats.garminImports.failed = (stats.garminImports.failed || 0) + 1;
+        }
+
+        // Save updated stats
+        await fetch(statsPath, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(stats)
+        });
+
+        console.log(`Garmin import stats updated: ${success ? 'success' : 'failed'}`);
+    } catch (error) {
+        console.warn('Failed to update Garmin import stats:', error.message);
+    }
 }
 
 /**
