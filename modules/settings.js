@@ -1,5 +1,7 @@
 // User settings management
 
+import { trackSettingsUpdate } from './firebaseAnalytics.js';
+
 // Default values
 const DEFAULT_FTP = 190;
 const DEFAULT_RUN_PACE = '6:00';
@@ -80,6 +82,13 @@ export function saveUserSettings(settings, callbacks = {}) {
     }
 
     console.log(`Settings updated - FTP: ${userFTP}W, Run: ${userRunPace}/km, Swim CSS: ${userSwimCSS}/100m, Run VO2max: ${userRunVO2max || 'N/A'}, Bike VO2max: ${userBikeVO2max || 'N/A'}`);
+
+    // Track settings update in Firebase
+    trackSettingsUpdate({
+        ftp: settings.ftp,
+        runPace: settings.runPace,
+        swimCSS: settings.swimCSS
+    });
 
     // Execute callbacks
     if (callbacks.onSettingsSaved) {

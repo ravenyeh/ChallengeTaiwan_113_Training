@@ -832,5 +832,17 @@
             <a href="index.html" class="back-link" style="font-size: 1.1rem;">← 返回主頁選擇課表</a>
         </div>
     </div>
+
+    <!-- Firebase Analytics for comparison page -->
+    <script type="module">
+        import { trackPageView, trackSessionStart, updateDailyStats } from './modules/firebaseAnalytics.js';
+
+        // Track page view when comparison page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            trackSessionStart();
+            trackPageView('comparison');
+            updateDailyStats();
+        });
+    </script>
 </body>
 </html>
