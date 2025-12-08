@@ -2,6 +2,7 @@
 
 import { escapeXml, getEnglishFilename, downloadFile } from './utils.js';
 import { getUserFTP } from './settings.js';
+import { trackWorkoutExport } from './firebaseAnalytics.js';
 
 // ============================================
 // JSON Export
@@ -10,8 +11,13 @@ import { getUserFTP } from './settings.js';
 // Download workout as JSON file
 export function downloadWorkoutJson(idx, filename) {
     const input = document.getElementById(`workout-json-${idx}`);
-    const json = JSON.stringify(JSON.parse(input.value), null, 2);
+    const workout = JSON.parse(input.value);
+    const json = JSON.stringify(workout, null, 2);
     downloadFile(json, `${getEnglishFilename(filename)}.json`, 'application/json');
+
+    // Track JSON export
+    const sportType = workout.sportType?.sportTypeKey || 'unknown';
+    trackWorkoutExport('json', sportType);
 }
 
 // ============================================
@@ -86,6 +92,9 @@ export function downloadWorkoutZwo(idx, filename) {
 </workout_file>`;
 
     downloadFile(zwoContent, `${getEnglishFilename(filename)}.zwo`, 'application/xml');
+
+    // Track ZWO export
+    trackWorkoutExport('zwo', 'bike');
 }
 
 // ============================================
@@ -177,4 +186,7 @@ MINUTES PERCENTAGE
     ergContent += `[END COURSE DATA]`;
 
     downloadFile(ergContent, `${getEnglishFilename(filename)}.erg`, 'text/plain');
+
+    // Track ERG export
+    trackWorkoutExport('erg', 'bike');
 }

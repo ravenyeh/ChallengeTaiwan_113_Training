@@ -1,6 +1,7 @@
 // Garmin Connect Integration
 
 import { convertToGarminWorkout } from './workoutBuilder.js';
+import { trackGarminImport } from './firebaseAnalytics.js';
 
 // ============================================
 // Session & Credentials Management
@@ -283,6 +284,16 @@ export async function directImportToGarmin(dayIndex, trainingData, overrideDate 
             saveGarminCredentials(email, password);
             updateGarminStatus(data.message || '匯入成功！', false);
 
+            // Track successful Garmin import
+            trackGarminImport({
+                success: true,
+                workoutCount: workouts.length,
+                workoutTypes: workouts.map(w => w.type),
+                date: training.date,
+                phase: training.phase,
+                method: useSavedCredentials ? 'one-click' : 'direct'
+            });
+
             // Trigger UI refresh to show one-click import button
             if (typeof window.refreshGarminUI === 'function') {
                 setTimeout(() => window.refreshGarminUI(), 1500);
@@ -295,6 +306,17 @@ export async function directImportToGarmin(dayIndex, trainingData, overrideDate 
                 errorMsg += '\n' + data.detail;
             }
 
+            // Track failed Garmin import
+            trackGarminImport({
+                success: false,
+                workoutCount: workouts.length,
+                workoutTypes: workouts.map(w => w.type),
+                date: training.date,
+                phase: training.phase,
+                method: useSavedCredentials ? 'one-click' : 'direct',
+                error: errorMsg
+            });
+
             // If authentication failed, clear saved credentials
             if (errorMsg.includes('密碼錯誤') || errorMsg.includes('credentials')) {
                 clearGarminCredentials();
@@ -304,6 +326,18 @@ export async function directImportToGarmin(dayIndex, trainingData, overrideDate 
         }
     } catch (error) {
         console.error('Direct import error:', error);
+
+        // Track connection error
+        trackGarminImport({
+            success: false,
+            workoutCount: workouts.length,
+            workoutTypes: workouts.map(w => w.type),
+            date: training.date,
+            phase: training.phase,
+            method: useSavedCredentials ? 'one-click' : 'direct',
+            error: 'connection_error'
+        });
+
         updateGarminStatus('連線錯誤\n請使用「複製 JSON」或「下載 .json」手動匯入至 Garmin Connect', true);
     }
 }

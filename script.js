@@ -8,6 +8,16 @@ import { garminTriData } from './modules/garminTriData.js';
 // Import utility functions
 import { formatDate, parsePaceToSeconds, formatSecondsToPace } from './modules/utils.js';
 
+// Import Firebase analytics
+import {
+    trackPageView,
+    trackPlanSelection,
+    trackWorkoutView,
+    trackPhaseFilter,
+    trackSessionStart,
+    updateDailyStats
+} from './modules/firebaseAnalytics.js';
+
 // Import settings management
 import {
     getUserFTP,
@@ -543,6 +553,12 @@ function showWorkoutModal(dayIndex, overrideDate = null) {
     currentWorkoutDayIndex = dayIndex;
     currentWorkoutOverrideDate = overrideDate;
     displayWorkoutModal(dayIndex, trainingData, overrideDate);
+
+    // Track workout view in Firebase
+    const workout = trainingData[dayIndex];
+    if (workout) {
+        trackWorkoutView(workout);
+    }
 }
 
 // Save user settings wrapper
@@ -571,7 +587,10 @@ function oneClickImportToGarmin(dayIndex) {
 
 // Switch training plan
 function switchTrainingPlan(planId) {
+    const previousPlan = getUserTrainingPlan();
     if (setUserTrainingPlan(planId)) {
+        // Track plan selection in Firebase
+        trackPlanSelection(planId, previousPlan);
         // Reload page to apply new training data
         window.location.reload();
     }
@@ -641,6 +660,8 @@ function initPhaseFilters() {
             filterBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             populateSchedule(btn.dataset.filter);
+            // Track phase filter in Firebase
+            trackPhaseFilter(btn.dataset.filter);
         });
     });
 }
@@ -651,6 +672,11 @@ function initPhaseFilters() {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initializing Challenge Taiwan 113 Training Plan...');
+
+    // Track page view and session start in Firebase
+    trackSessionStart();
+    trackPageView('home');
+    updateDailyStats();
 
     // Set training data reference for UI module (used for Garmin refresh)
     setTrainingDataReference(trainingData);
