@@ -49,6 +49,10 @@ export function swimPaceToMetersPerSecond(paceSecondsPer100m) {
 export function createSwimPaceTarget(fastPaceSeconds, slowPaceSeconds) {
     return {
         targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'speed.zone' },
+// Note: Swimming uses workoutTargetTypeId 10 (swim.pace.zone), not 6 (pace.zone which is for running)
+export function createSwimPaceTarget(fastPaceSeconds, slowPaceSeconds) {
+    return {
+        targetType: { workoutTargetTypeId: 10, workoutTargetTypeKey: 'swim.pace.zone' },
         targetValueOne: swimPaceToMetersPerSecond(slowPaceSeconds),
         targetValueTwo: swimPaceToMetersPerSecond(fastPaceSeconds)
     };
