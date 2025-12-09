@@ -44,9 +44,10 @@ export function swimPaceToMetersPerSecond(paceSecondsPer100m) {
 }
 
 // Create swim pace target object for Garmin workout steps
+// Note: Swimming uses workoutTargetTypeId 10 (swim.pace.zone), not 6 (pace.zone which is for running)
 export function createSwimPaceTarget(fastPaceSeconds, slowPaceSeconds) {
     return {
-        targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'pace.zone' },
+        targetType: { workoutTargetTypeId: 10, workoutTargetTypeKey: 'swim.pace.zone' },
         targetValueOne: swimPaceToMetersPerSecond(slowPaceSeconds),
         targetValueTwo: swimPaceToMetersPerSecond(fastPaceSeconds)
     };
