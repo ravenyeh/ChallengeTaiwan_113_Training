@@ -15,7 +15,8 @@ import {
     trackWorkoutView,
     trackPhaseFilter,
     trackSessionStart,
-    updateDailyStats
+    updateDailyStats,
+    updateFooterCounters
 } from './modules/firebaseAnalytics.js';
 
 // Import settings management
@@ -678,6 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
     trackSessionStart();
     trackPageView('home');
     updateDailyStats();
+    updateFooterCounters();
 
     // Set training data reference for UI module (used for Garmin refresh)
     setTrainingDataReference(trainingData);
