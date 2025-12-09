@@ -2,6 +2,13 @@
 // Track website and training schedule usage with Firebase Realtime Database
 
 const FIREBASE_DB_URL = 'https://ironmantrainingtw-default-rtdb.asia-southeast1.firebasedatabase.app';
+const FIREBASE_API_KEY = 'AIzaSyBmbLqbrq2TgCkHQIH8Yiw3qo5oRO6BB40';
+
+// Helper function to add API key to Firebase URL
+function withApiKey(url) {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}key=${FIREBASE_API_KEY}`;
+}
 
 // Generate a unique session ID for this visit
 function generateSessionId() {
@@ -62,7 +69,7 @@ async function sendEvent(eventType, eventData = {}) {
         };
 
         // Use Firebase REST API to push data
-        const response = await fetch(`${FIREBASE_DB_URL}/events.json`, {
+        const response = await fetch(withApiKey(`${FIREBASE_DB_URL}/events.json`), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -135,7 +142,7 @@ export function trackWorkoutView(workout) {
 async function updateWorkoutViewStats() {
     try {
         const today = new Date().toISOString().split('T')[0];
-        const statsPath = `${FIREBASE_DB_URL}/daily_stats/${today}.json`;
+        const statsPath = withApiKey(`${FIREBASE_DB_URL}/daily_stats/${today}.json`);
 
         // Get current stats
         const response = await fetch(statsPath);
@@ -192,7 +199,7 @@ export function trackGarminImport(details) {
 async function updateGarminImportStats(success) {
     try {
         const today = new Date().toISOString().split('T')[0];
-        const statsPath = `${FIREBASE_DB_URL}/daily_stats/${today}.json`;
+        const statsPath = withApiKey(`${FIREBASE_DB_URL}/daily_stats/${today}.json`);
 
         // Get current stats
         const response = await fetch(statsPath);
@@ -336,7 +343,7 @@ export function trackSessionStart() {
 export async function updateDailyStats() {
     try {
         const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-        const statsPath = `${FIREBASE_DB_URL}/daily_stats/${today}.json`;
+        const statsPath = withApiKey(`${FIREBASE_DB_URL}/daily_stats/${today}.json`);
 
         // Get current stats
         const response = await fetch(statsPath);
@@ -391,7 +398,7 @@ export async function updateDailyStats() {
  */
 export async function fetchTotalStats() {
     try {
-        const statsPath = `${FIREBASE_DB_URL}/daily_stats.json`;
+        const statsPath = withApiKey(`${FIREBASE_DB_URL}/daily_stats.json`);
         const response = await fetch(statsPath);
 
         if (!response.ok) {
