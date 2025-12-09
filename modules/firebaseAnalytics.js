@@ -381,6 +381,115 @@ export async function updateDailyStats() {
     }
 }
 
+// ============================================
+// Fetch Total Stats for Display
+// ============================================
+
+/**
+ * Fetch total aggregated stats from all daily stats
+ * @returns {Promise<object>} Total stats object with pageViews, workoutViews, garminImports
+ */
+export async function fetchTotalStats() {
+    try {
+        const statsPath = `${FIREBASE_DB_URL}/daily_stats.json`;
+        const response = await fetch(statsPath);
+
+        if (!response.ok) {
+            console.warn('Failed to fetch total stats:', response.status);
+            return null;
+        }
+
+        const allDailyStats = await response.json();
+
+        if (!allDailyStats) {
+            return {
+                totalPageViews: 0,
+                totalWorkoutViews: 0,
+                totalGarminImports: 0,
+                totalUniqueUsers: 0
+            };
+        }
+
+        // Aggregate all daily stats
+        let totalPageViews = 0;
+        let totalWorkoutViews = 0;
+        let totalGarminImports = 0;
+        const allUniqueUsers = new Set();
+
+        for (const date in allDailyStats) {
+            const dayStats = allDailyStats[date];
+            if (dayStats) {
+                totalPageViews += dayStats.pageViews || 0;
+                totalWorkoutViews += dayStats.workoutViews || 0;
+
+                if (dayStats.garminImports) {
+                    totalGarminImports += (dayStats.garminImports.success || 0);
+                }
+
+                if (dayStats.uniqueUsers && Array.isArray(dayStats.uniqueUsers)) {
+                    dayStats.uniqueUsers.forEach(userId => allUniqueUsers.add(userId));
+                }
+            }
+        }
+
+        return {
+            totalPageViews,
+            totalWorkoutViews,
+            totalGarminImports,
+            totalUniqueUsers: allUniqueUsers.size
+        };
+    } catch (error) {
+        console.warn('Failed to fetch total stats:', error.message);
+        return null;
+    }
+}
+
+/**
+ * Update footer counter display with fetched stats
+ */
+export async function updateFooterCounters() {
+    try {
+        const stats = await fetchTotalStats();
+
+        if (!stats) return;
+
+        // Update page views counter
+        const pageViewsEl = document.getElementById('footerPageViews');
+        if (pageViewsEl) {
+            pageViewsEl.textContent = formatNumber(stats.totalPageViews);
+        }
+
+        // Update Garmin imports counter
+        const garminImportsEl = document.getElementById('footerGarminImports');
+        if (garminImportsEl) {
+            garminImportsEl.textContent = formatNumber(stats.totalGarminImports);
+        }
+
+        // Update workout views counter (optional)
+        const workoutViewsEl = document.getElementById('footerWorkoutViews');
+        if (workoutViewsEl) {
+            workoutViewsEl.textContent = formatNumber(stats.totalWorkoutViews);
+        }
+    } catch (error) {
+        console.warn('Failed to update footer counters:', error.message);
+    }
+}
+
+/**
+ * Format number with locale-aware thousand separators
+ * @param {number} num - Number to format
+ * @returns {string} Formatted number string
+ */
+function formatNumber(num) {
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    }
+    if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toLocaleString('zh-TW');
+}
+
 // Export all tracking functions
 export default {
     trackPageView,
@@ -392,5 +501,7 @@ export default {
     trackPhaseFilter,
     trackSectionView,
     trackSessionStart,
-    updateDailyStats
+    updateDailyStats,
+    fetchTotalStats,
+    updateFooterCounters
 };
