@@ -12,8 +12,8 @@ export function getSwimPaceZones() {
     const userSwimCSS = getUserSwimCSS();
     const cssSeconds = userSwimCSS ? parsePaceToSeconds(userSwimCSS) : 120; // default 2:00/100m
     return {
-        recovery: { pace: Math.round(cssSeconds * 1.20), name: '恢復游' },      // +20%
-        technique: { pace: Math.round(cssSeconds * 1.15), name: '技術課' },     // +15%
+        recovery: { pace: Math.round(cssSeconds * 1.15), name: '恢復游' },      // +15% (was +20%)
+        technique: { pace: Math.round(cssSeconds * 1.12), name: '技術課' },     // +12% (was +15%)
         aerobic: { pace: Math.round(cssSeconds * 1.05), name: '有氧游' },       // +5%
         threshold: { pace: cssSeconds, name: 'CSS配速' },                        // CSS
         interval: { pace: Math.round(cssSeconds * 0.95), name: '間歇' },        // -5%
@@ -27,8 +27,8 @@ export function getSwimPaceTarget(zoneType) {
     if (!userSwimCSS) return null;
     const cssSeconds = parsePaceToSeconds(userSwimCSS);
     const paceMultipliers = {
-        'recovery': 1.20,
-        'technique': 1.15,
+        'recovery': 1.15,     // was 1.20
+        'technique': 1.12,    // was 1.15
         'aerobic': 1.05,
         'threshold': 1.00,
         'interval': 0.95,
@@ -170,8 +170,8 @@ export function buildWorkoutDescription(day, sport) {
     if (sport === 'swim' && userSwimCSS) {
         const basePaceSeconds = parsePaceToSeconds(userSwimCSS);
         const zones = {
-            '恢復游': formatSecondsToPace(basePaceSeconds * 1.20),
-            '技術課': formatSecondsToPace(basePaceSeconds * 1.15),
+            '恢復游': formatSecondsToPace(basePaceSeconds * 1.15),     // was 1.20
+            '技術課': formatSecondsToPace(basePaceSeconds * 1.12),     // was 1.15
             '有氧游': formatSecondsToPace(basePaceSeconds * 1.05),
             '配速訓練': userSwimCSS,
             '間歇': formatSecondsToPace(basePaceSeconds * 0.95)
