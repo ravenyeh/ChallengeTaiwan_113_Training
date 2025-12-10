@@ -93,7 +93,7 @@ export function generateSwimSteps(totalDistance, content) {
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: Math.round(warmupDistance * 0.5),
-            ...createSwimPaceTarget(zones.recovery.pace - 10, zones.recovery.pace + 15),
+            ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
             description: `輕鬆游熱身 @ ${zones.recovery.name}`
         });
 
@@ -115,7 +115,7 @@ export function generateSwimSteps(totalDistance, content) {
                         stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                         endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                         endConditionValue: 50,
-                        ...createSwimPaceTarget(zones.technique.pace - 10, zones.technique.pace + 15),
+                        ...createSwimPaceTarget(zones.technique.pace - 5, zones.technique.pace + 10),
                         description: drillDesc
                     },
                     {
@@ -154,13 +154,14 @@ export function generateSwimSteps(totalDistance, content) {
         // Determine pace target based on workout type
         let targetPace, paceDesc;
         if (hasSprint) {
-            targetPace = createSwimPaceTarget(zones.sprint.pace - 5, zones.sprint.pace + 10);
+            targetPace = createSwimPaceTarget(zones.sprint.pace - 3, zones.sprint.pace + 5);
             paceDesc = zones.sprint.name;
         } else if (hasMixedStroke) {
-            targetPace = createSwimPaceTarget(zones.aerobic.pace - 5, zones.aerobic.pace + 10);
+            targetPace = createSwimPaceTarget(zones.aerobic.pace - 3, zones.aerobic.pace + 5);
             paceDesc = `${zones.aerobic.name} (蛙/自混合)`;
         } else {
-            targetPace = createSwimPaceTarget(zones.threshold.pace - 5, zones.threshold.pace + 5);
+            // CSS pace with ±3 seconds tolerance (was ±5)
+            targetPace = createSwimPaceTarget(zones.threshold.pace - 3, zones.threshold.pace + 3);
             paceDesc = zones.threshold.name;
         }
 
@@ -194,7 +195,7 @@ export function generateSwimSteps(totalDistance, content) {
             stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: cooldownDistance,
-            ...createSwimPaceTarget(zones.recovery.pace - 10, zones.recovery.pace + 20),
+            ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
             description: `緩和游 @ ${zones.recovery.name}`
         });
 
@@ -205,7 +206,7 @@ export function generateSwimSteps(totalDistance, content) {
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: 300,
-            ...createSwimPaceTarget(zones.recovery.pace - 10, zones.recovery.pace + 15),
+            ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
             description: `輕鬆游熱身 @ ${zones.recovery.name}`
         });
 
@@ -220,7 +221,7 @@ export function generateSwimSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: 50,
-                    ...createSwimPaceTarget(zones.technique.pace - 10, zones.technique.pace + 20),
+                    ...createSwimPaceTarget(zones.technique.pace - 5, zones.technique.pace + 15),
                     description: '踢水練習'
                 },
                 {
@@ -245,7 +246,7 @@ export function generateSwimSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: 50,
-                    ...createSwimPaceTarget(zones.technique.pace - 10, zones.technique.pace + 15),
+                    ...createSwimPaceTarget(zones.technique.pace - 5, zones.technique.pace + 10),
                     description: '划手練習 (夾浮板)'
                 },
                 {
@@ -271,7 +272,7 @@ export function generateSwimSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: 100,
-                    ...createSwimPaceTarget(zones.aerobic.pace - 5, zones.aerobic.pace + 10),
+                    ...createSwimPaceTarget(zones.aerobic.pace - 3, zones.aerobic.pace + 5),
                     description: `專注划頻與流線型 @ ${zones.aerobic.name}`
                 },
                 {
@@ -290,7 +291,7 @@ export function generateSwimSteps(totalDistance, content) {
             stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: 200,
-            ...createSwimPaceTarget(zones.recovery.pace - 10, zones.recovery.pace + 20),
+            ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
             description: `緩和游 @ ${zones.recovery.name}`
         });
 
@@ -301,7 +302,7 @@ export function generateSwimSteps(totalDistance, content) {
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: 200,
-            ...createSwimPaceTarget(zones.recovery.pace - 10, zones.recovery.pace + 20),
+            ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
             description: `輕鬆游熱身 @ ${zones.recovery.name}`
         });
         steps.push({
@@ -309,7 +310,7 @@ export function generateSwimSteps(totalDistance, content) {
             stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: totalDistance - 400,
-            ...createSwimPaceTarget(zones.recovery.pace - 10, zones.recovery.pace + 20),
+            ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
             description: `${zones.recovery.name} - 保持輕鬆划頻`
         });
         steps.push({
@@ -317,7 +318,7 @@ export function generateSwimSteps(totalDistance, content) {
             stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: 200,
-            ...createSwimPaceTarget(zones.recovery.pace - 10, zones.recovery.pace + 25),
+            ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 15),
             description: `緩和游 @ ${zones.recovery.name}`
         });
 
@@ -332,7 +333,7 @@ export function generateSwimSteps(totalDistance, content) {
             stepType: { stepTypeId: 1, stepTypeKey: 'warmup' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: warmupDist,
-            ...createSwimPaceTarget(zones.recovery.pace - 10, zones.recovery.pace + 15),
+            ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
             description: `混合式熱身 @ ${zones.recovery.name} (自由式為主)`
         });
 
@@ -348,7 +349,7 @@ export function generateSwimSteps(totalDistance, content) {
                     stepType: { stepTypeId: 3, stepTypeKey: 'interval' },
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: 100,
-                    ...createSwimPaceTarget(zones.aerobic.pace - 5, zones.aerobic.pace + 10),
+                    ...createSwimPaceTarget(zones.aerobic.pace - 3, zones.aerobic.pace + 5),
                     description: `有氧游 @ ${zones.aerobic.name}`
                 },
                 {
@@ -367,7 +368,7 @@ export function generateSwimSteps(totalDistance, content) {
             stepType: { stepTypeId: 2, stepTypeKey: 'cooldown' },
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: cooldownDist,
-            ...createSwimPaceTarget(zones.recovery.pace - 10, zones.recovery.pace + 20),
+            ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
             description: `緩和游 @ ${zones.recovery.name}`
         });
     }
@@ -1355,6 +1356,9 @@ export function buildWorkoutsForDay(day, dayIndex, trainingData) {
         resetStepIdCounter();
         const swimDistance = parseFloat(day.swim) * 1000;
         const rawSteps = generateSwimSteps(swimDistance, day.content);
+        // Estimate duration: base CSS pace (2:30/100m) + 10% for warmup/cooldown at recovery pace + rest intervals
+        // Formula: (distance / 100) * 150 seconds * 1.1 = distance * 1.65
+        const estimatedSwimDuration = Math.round(swimDistance * 2.5 / 100 * 60 * 1.1);
         workouts.push({
             type: 'swim',
             data: {
@@ -1368,7 +1372,7 @@ export function buildWorkoutsForDay(day, dayIndex, trainingData) {
                     sportType: sportTypes.swim,
                     workoutSteps: rawSteps.map(step => formatStep(step))
                 }],
-                estimatedDurationInSecs: Math.round(swimDistance * 2.5 / 100 * 60),
+                estimatedDurationInSecs: estimatedSwimDuration,
                 estimatedDistanceInMeters: swimDistance,
                 poolLength: 25,
                 poolLengthUnit: { unitId: 1, unitKey: 'meter' },
