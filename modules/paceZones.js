@@ -38,19 +38,22 @@ export function getSwimPaceTarget(zoneType) {
     return Math.round(cssSeconds * multiplier);
 }
 
-// Convert swim pace (seconds per 100m) to meters per second for Garmin API
-export function swimPaceToMetersPerSecond(paceSecondsPer100m) {
-    return 100 / paceSecondsPer100m;
+// Convert swim pace (seconds per 100m) to Garmin pace coefficient
+// Garmin format: coefficient = seconds / 1000
+// Example: 2:30/100m = 150 seconds → 0.15
+export function swimPaceToGarminCoefficient(paceSecondsPer100m) {
+    return paceSecondsPer100m / 1000;
 }
 
 // Create swim pace target object for Garmin workout steps
-// Swimming uses workoutTargetTypeId 6 (pace.zone) with pace in seconds per 100m
-// targetValueOne = slower pace (higher seconds), targetValueTwo = faster pace (lower seconds)
+// Swimming uses workoutTargetTypeId 5 (speed.zone) with pace coefficient
+// Garmin coefficient: seconds/1000 (e.g., 0.5 = 8:20/100m, 0.15 = 2:30/100m)
+// targetValueOne = slower pace (higher coefficient), targetValueTwo = faster pace (lower coefficient)
 export function createSwimPaceTarget(fastPaceSeconds, slowPaceSeconds) {
     return {
-        targetType: { workoutTargetTypeId: 6, workoutTargetTypeKey: 'swim.pace.zone' },
-        targetValueOne: slowPaceSeconds,   // slower pace (e.g., 183 sec/100m)
-        targetValueTwo: fastPaceSeconds    // faster pace (e.g., 168 sec/100m)
+        targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'speed.zone' },
+        targetValueOne: swimPaceToGarminCoefficient(slowPaceSeconds),   // slower (e.g., 0.183 for 3:03/100m)
+        targetValueTwo: swimPaceToGarminCoefficient(fastPaceSeconds)    // faster (e.g., 0.168 for 2:48/100m)
     };
 }
 
