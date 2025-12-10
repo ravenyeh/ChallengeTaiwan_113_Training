@@ -14,6 +14,16 @@ export function getNextStepId() {
     return ++stepIdCounter;
 }
 
+// Swim exercise types for Garmin
+export const SWIM_EXERCISE_TYPES = {
+    freestyle: { exerciseTypeId: 260, exerciseTypeKey: 'freestyle' },
+    backstroke: { exerciseTypeId: 261, exerciseTypeKey: 'backstroke' },
+    breaststroke: { exerciseTypeId: 262, exerciseTypeKey: 'breaststroke' },
+    butterfly: { exerciseTypeId: 263, exerciseTypeKey: 'butterfly' },
+    drill: { exerciseTypeId: 264, exerciseTypeKey: 'drill' },
+    mixed: { exerciseTypeId: 265, exerciseTypeKey: 'mixed' }
+};
+
 // Format step for Garmin API
 export function formatStep(step) {
     // Determine if this is a repeat group or an executable step
@@ -45,6 +55,10 @@ export function formatStep(step) {
     }
     if (step.description) {
         formatted.description = step.description;
+    }
+    // Add exerciseType for swim workouts
+    if (step.exerciseType) {
+        formatted.exerciseType = step.exerciseType;
     }
 
     // Handle repeat groups
@@ -1346,7 +1360,7 @@ export function buildWorkoutsForDay(day, dayIndex, trainingData) {
     const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
 
     const sportTypes = {
-        swim: { sportTypeId: 5, sportTypeKey: 'pool_swimming' },
+        swim: { sportTypeId: 4, sportTypeKey: 'swimming' },  // was 5 (strength_training)
         bike: { sportTypeId: 2, sportTypeKey: 'cycling' },
         run: { sportTypeId: 1, sportTypeKey: 'running' }
     };
