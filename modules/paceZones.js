@@ -38,22 +38,25 @@ export function getSwimPaceTarget(zoneType) {
     return Math.round(cssSeconds * multiplier);
 }
 
-// Convert swim pace (seconds per 100m) to Garmin pace coefficient
-// Garmin format: coefficient = seconds / 1000
-// Example: 2:30/100m = 150 seconds → 0.15
-export function swimPaceToGarminCoefficient(paceSecondsPer100m) {
-    return paceSecondsPer100m / 1000;
+// Convert swim pace (seconds per 100m) to CSS offset
+// CSS offset = target pace - user's CSS pace
+// Example: If CSS is 150s and target is 165s, offset = +15 (15 seconds slower than CSS)
+export function swimPaceToCSSOffset(targetPaceSeconds, cssSeconds) {
+    return targetPaceSeconds - cssSeconds;
 }
 
 // Create swim pace target object for Garmin workout steps
-// Swimming uses workoutTargetTypeId 5 (speed.zone) with pace coefficient
-// Garmin coefficient: seconds/1000 (e.g., 0.5 = 8:20/100m, 0.15 = 2:30/100m)
-// targetValueOne = slower pace (higher coefficient), targetValueTwo = faster pace (lower coefficient)
+// Swimming uses workoutTargetTypeId 17 (swim.css.offset) with CSS offset in seconds
+// targetValueOne = slower pace offset (positive), targetValueTwo = faster pace offset (negative)
+// Example for CSS 2:30 (150s): recovery zone 2:53 (173s) has offset +23
 export function createSwimPaceTarget(fastPaceSeconds, slowPaceSeconds) {
+    const userSwimCSS = getUserSwimCSS();
+    const cssSeconds = userSwimCSS ? parsePaceToSeconds(userSwimCSS) : 150;
+
     return {
-        targetType: { workoutTargetTypeId: 5, workoutTargetTypeKey: 'speed.zone' },
-        targetValueOne: swimPaceToGarminCoefficient(slowPaceSeconds),   // slower (e.g., 0.183 for 3:03/100m)
-        targetValueTwo: swimPaceToGarminCoefficient(fastPaceSeconds)    // faster (e.g., 0.168 for 2:48/100m)
+        targetType: { workoutTargetTypeId: 17, workoutTargetTypeKey: 'swim.css.offset' },
+        targetValueOne: swimPaceToCSSOffset(slowPaceSeconds, cssSeconds),   // slower (e.g., +23 for recovery)
+        targetValueTwo: swimPaceToCSSOffset(fastPaceSeconds, cssSeconds)    // faster (e.g., -3 for interval)
     };
 }
 
