@@ -159,15 +159,14 @@ function renderSingleStep(step, sportType) {
     if (targetType === 'power.zone' && step.targetValueOne && step.targetValueTwo) {
         targetText = `Custom Power · (${Math.round(step.targetValueOne)}-${Math.round(step.targetValueTwo)} W)`;
     } else if (targetType === 'pace.zone' && step.targetValueOne && step.targetValueTwo) {
-        if (sportType === 'swim') {
-            const p1 = formatPace(100 / step.targetValueOne);
-            const p2 = formatPace(100 / step.targetValueTwo);
-            targetText = `Pace · (${p2}-${p1} /100m)`;
-        } else {
-            const p1 = formatPace(1000 / step.targetValueOne);
-            const p2 = formatPace(1000 / step.targetValueTwo);
-            targetText = `Pace · (${p2}-${p1} /km)`;
-        }
+        const p1 = formatPace(1000 / step.targetValueOne);
+        const p2 = formatPace(1000 / step.targetValueTwo);
+        targetText = `Pace · (${p2}-${p1} /km)`;
+    } else if (targetType === 'speed.zone' && step.targetValueOne && step.targetValueTwo) {
+        // Swimming uses speed.zone with m/s values
+        const p1 = formatPace(100 / step.targetValueOne);
+        const p2 = formatPace(100 / step.targetValueTwo);
+        targetText = `Pace · (${p2}-${p1} /100m)`;
     }
 
     // Format secondary target (cadence)
