@@ -14,14 +14,32 @@ export function getNextStepId() {
     return ++stepIdCounter;
 }
 
-// Swim exercise types for Garmin
-export const SWIM_EXERCISE_TYPES = {
-    freestyle: { exerciseTypeId: 260, exerciseTypeKey: 'freestyle' },
-    backstroke: { exerciseTypeId: 261, exerciseTypeKey: 'backstroke' },
-    breaststroke: { exerciseTypeId: 262, exerciseTypeKey: 'breaststroke' },
-    butterfly: { exerciseTypeId: 263, exerciseTypeKey: 'butterfly' },
-    drill: { exerciseTypeId: 264, exerciseTypeKey: 'drill' },
-    mixed: { exerciseTypeId: 265, exerciseTypeKey: 'mixed' }
+// Swim stroke types for Garmin (from API)
+export const SWIM_STROKE_TYPES = {
+    any_stroke: { strokeTypeId: 1, strokeTypeKey: 'any_stroke' },
+    backstroke: { strokeTypeId: 2, strokeTypeKey: 'backstroke' },
+    breaststroke: { strokeTypeId: 3, strokeTypeKey: 'breaststroke' },
+    drill: { strokeTypeId: 4, strokeTypeKey: 'drill' },
+    fly: { strokeTypeId: 5, strokeTypeKey: 'fly' },
+    free: { strokeTypeId: 6, strokeTypeKey: 'free' },
+    individual_medley: { strokeTypeId: 7, strokeTypeKey: 'individual_medley' },
+    mixed: { strokeTypeId: 8, strokeTypeKey: 'mixed' }
+};
+
+// Swim drill types for Garmin (from API)
+export const SWIM_DRILL_TYPES = {
+    kick: { drillTypeId: 1, drillTypeKey: 'kick' },
+    pull: { drillTypeId: 2, drillTypeKey: 'pull' },
+    drill: { drillTypeId: 3, drillTypeKey: 'drill' }
+};
+
+// Swim equipment types for Garmin (from API)
+export const SWIM_EQUIPMENT_TYPES = {
+    fins: { equipmentTypeId: 1, equipmentTypeKey: 'fins' },
+    kickboard: { equipmentTypeId: 2, equipmentTypeKey: 'kickboard' },
+    paddles: { equipmentTypeId: 3, equipmentTypeKey: 'paddles' },
+    pull_buoy: { equipmentTypeId: 4, equipmentTypeKey: 'pull_buoy' },
+    snorkel: { equipmentTypeId: 5, equipmentTypeKey: 'snorkel' }
 };
 
 // Format step for Garmin API
@@ -56,9 +74,21 @@ export function formatStep(step) {
     if (step.description) {
         formatted.description = step.description;
     }
-    // Add exerciseType for swim workouts
+    // Add exerciseType for swim workouts (legacy)
     if (step.exerciseType) {
         formatted.exerciseType = step.exerciseType;
+    }
+    // Add strokeType for swim workouts
+    if (step.strokeType) {
+        formatted.strokeType = step.strokeType;
+    }
+    // Add drillType for drill steps
+    if (step.drillType) {
+        formatted.drillType = step.drillType;
+    }
+    // Add equipmentType for swim steps with equipment
+    if (step.equipmentType) {
+        formatted.equipmentType = step.equipmentType;
     }
 
     // Handle repeat groups
@@ -108,6 +138,7 @@ export function generateSwimSteps(totalDistance, content) {
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: Math.round(warmupDistance * 0.5),
             ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
+            strokeType: SWIM_STROKE_TYPES.free,
             description: `輕鬆游熱身 @ ${zones.recovery.name}`
         });
 
@@ -130,6 +161,8 @@ export function generateSwimSteps(totalDistance, content) {
                         endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                         endConditionValue: 50,
                         ...createSwimPaceTarget(zones.technique.pace - 5, zones.technique.pace + 10),
+                        strokeType: SWIM_STROKE_TYPES.drill,
+                        drillType: hasPull ? SWIM_DRILL_TYPES.pull : hasDrill ? SWIM_DRILL_TYPES.kick : SWIM_DRILL_TYPES.drill,
                         description: drillDesc
                     },
                     {
@@ -156,6 +189,7 @@ export function generateSwimSteps(totalDistance, content) {
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: 25,
                     ...createSwimPaceTarget(zones.sprint.pace, zones.recovery.pace),
+                    strokeType: SWIM_STROKE_TYPES.free,
                     description: '漸速游 (由慢到快)'
                 }
             ],
@@ -179,6 +213,9 @@ export function generateSwimSteps(totalDistance, content) {
             paceDesc = zones.threshold.name;
         }
 
+        // Determine strokeType based on content
+        const mainStrokeType = hasMixedStroke ? SWIM_STROKE_TYPES.mixed : SWIM_STROKE_TYPES.free;
+
         steps.push({
             stepOrder: stepOrder++,
             stepType: { stepTypeId: 6, stepTypeKey: 'repeat' },
@@ -190,6 +227,7 @@ export function generateSwimSteps(totalDistance, content) {
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: distance,
                     ...targetPace,
+                    strokeType: mainStrokeType,
                     description: `主課表 ${distance}m @ ${paceDesc}`
                 },
                 {
@@ -210,6 +248,7 @@ export function generateSwimSteps(totalDistance, content) {
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: cooldownDistance,
             ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
+            strokeType: SWIM_STROKE_TYPES.free,
             description: `緩和游 @ ${zones.recovery.name}`
         });
 
@@ -221,6 +260,7 @@ export function generateSwimSteps(totalDistance, content) {
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: 300,
             ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
+            strokeType: SWIM_STROKE_TYPES.free,
             description: `輕鬆游熱身 @ ${zones.recovery.name}`
         });
 
@@ -236,6 +276,9 @@ export function generateSwimSteps(totalDistance, content) {
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: 50,
                     ...createSwimPaceTarget(zones.technique.pace - 5, zones.technique.pace + 15),
+                    strokeType: SWIM_STROKE_TYPES.drill,
+                    drillType: SWIM_DRILL_TYPES.kick,
+                    equipmentType: SWIM_EQUIPMENT_TYPES.kickboard,
                     description: '踢水練習'
                 },
                 {
@@ -261,6 +304,9 @@ export function generateSwimSteps(totalDistance, content) {
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: 50,
                     ...createSwimPaceTarget(zones.technique.pace - 5, zones.technique.pace + 10),
+                    strokeType: SWIM_STROKE_TYPES.drill,
+                    drillType: SWIM_DRILL_TYPES.pull,
+                    equipmentType: SWIM_EQUIPMENT_TYPES.pull_buoy,
                     description: '划手練習 (夾浮板)'
                 },
                 {
@@ -287,6 +333,7 @@ export function generateSwimSteps(totalDistance, content) {
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: 100,
                     ...createSwimPaceTarget(zones.aerobic.pace - 3, zones.aerobic.pace + 5),
+                    strokeType: SWIM_STROKE_TYPES.free,
                     description: `專注划頻與流線型 @ ${zones.aerobic.name}`
                 },
                 {
@@ -306,6 +353,7 @@ export function generateSwimSteps(totalDistance, content) {
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: 200,
             ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
+            strokeType: SWIM_STROKE_TYPES.free,
             description: `緩和游 @ ${zones.recovery.name}`
         });
 
@@ -317,6 +365,7 @@ export function generateSwimSteps(totalDistance, content) {
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: 200,
             ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
+            strokeType: SWIM_STROKE_TYPES.free,
             description: `輕鬆游熱身 @ ${zones.recovery.name}`
         });
         steps.push({
@@ -325,6 +374,7 @@ export function generateSwimSteps(totalDistance, content) {
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: totalDistance - 400,
             ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
+            strokeType: SWIM_STROKE_TYPES.free,
             description: `${zones.recovery.name} - 保持輕鬆划頻`
         });
         steps.push({
@@ -333,6 +383,7 @@ export function generateSwimSteps(totalDistance, content) {
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: 200,
             ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 15),
+            strokeType: SWIM_STROKE_TYPES.free,
             description: `緩和游 @ ${zones.recovery.name}`
         });
 
@@ -348,6 +399,7 @@ export function generateSwimSteps(totalDistance, content) {
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: warmupDist,
             ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
+            strokeType: SWIM_STROKE_TYPES.free,
             description: `混合式熱身 @ ${zones.recovery.name} (自由式為主)`
         });
 
@@ -364,6 +416,7 @@ export function generateSwimSteps(totalDistance, content) {
                     endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
                     endConditionValue: 100,
                     ...createSwimPaceTarget(zones.aerobic.pace - 3, zones.aerobic.pace + 5),
+                    strokeType: SWIM_STROKE_TYPES.free,
                     description: `有氧游 @ ${zones.aerobic.name}`
                 },
                 {
@@ -383,6 +436,7 @@ export function generateSwimSteps(totalDistance, content) {
             endCondition: { conditionTypeId: 3, conditionTypeKey: 'distance' },
             endConditionValue: cooldownDist,
             ...createSwimPaceTarget(zones.recovery.pace - 5, zones.recovery.pace + 10),
+            strokeType: SWIM_STROKE_TYPES.free,
             description: `緩和游 @ ${zones.recovery.name}`
         });
     }
